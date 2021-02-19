@@ -1063,7 +1063,7 @@ SUBROUTINE write_ts( grid )
 
             WRITE(UNIT=iunit,FMT=profile_format)  &
                               grid%ts_hour(n,i),             &
-                              grid%ts_tke_profile(n,i,2:grid%max_ts_level)                                       
+                              grid%ts_tke_profile(n,i,1:grid%max_ts_level)                                       
          END DO
          CLOSE(UNIT=iunit)
 
