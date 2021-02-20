@@ -776,6 +776,18 @@ state    real   ts_th_profile  ?!k       misc      -         -      -        "TS
 state    real   ts_qv_profile  ?!k       misc      -         -      -        "TS_QV_PROFILE"  "Water vapor mixing ratio, vertical profile" "kg/kg"
 state    real   ts_p_profile   ?!k       misc      -         -      -        "TS_P_PROFILE"   "Pressure, vertical profile" "Pa"
 state    real   ts_tke_profile ?!k       misc      -         -      -        "TS_TKE_PROFILE" "TKE, vertical profile" "m2 s-2"
+state    real   ts_m11_profile ?!k       misc      -         -      -        "TS_M11_PROFILE" "M11, vertical profile" "m2 s-2"
+state    real   ts_m12_profile ?!k       misc      -         -      -        "TS_M12_PROFILE" "M12, vertical profile" "m2 s-2"
+state    real   ts_m13_profile ?!k       misc      -         -      -        "TS_M13_PROFILE" "M13, vertical profile" "m2 s-2"
+state    real   ts_m22_profile ?!k       misc      -         -      -        "TS_M22_PROFILE" "M22, vertical profile" "m2 s-2"
+state    real   ts_m33_profile ?!k       misc      -         -      -        "TS_M33_PROFILE" "M33, vertical profile" "m2 s-2"
+state    real   ts_m23_profile ?!k       misc      -         -      -        "TS_M23_PROFILE" "M23, vertical profile" "m2 s-2"
+state    real   ts_mh1_profile ?!k       misc      -         -      -        "TS_MH1_PROFILE" "MH1, vertical profile" "K m s-1"
+state    real   ts_mh2_profile ?!k       misc      -         -      -        "TS_MH2_PROFILE" "MH2, vertical profile" "K m s-1"
+state    real   ts_mh3_profile ?!k       misc      -         -      -        "TS_MH3_PROFILE" "MH3, vertical profile" "K m s-1"
+state    real   ts_mq1_profile ?!k       misc      -         -      -        "TS_MQ1_PROFILE" "MQ1, vertical profile" "m s-1"
+state    real   ts_mq2_profile ?!k       misc      -         -      -        "TS_MQ2_PROFILE" "MQ2, vertical profile" "m s-1"
+state    real   ts_mq3_profile ?!k       misc      -         -      -        "TS_MQ3_PROFILE" "MQ3, vertical profile" "m s-1"
 
 
 # urban model variables
