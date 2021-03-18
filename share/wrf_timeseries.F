@@ -518,6 +518,8 @@ SUBROUTINE calc_ts( grid )
          grid%ts_glw(n,i)  = grid%glw(ix,iy)
          grid%ts_gsw(n,i)  = grid%gsw(ix,iy)
          grid%ts_hfx(n,i)  = grid%hfx(ix,iy)
+         grid%ts_qfx(n,i)  = grid%qfx(ix,iy)*1000.0
+         grid%ts_ust(n,i)  = grid%ust(ix,iy)
          grid%ts_lh(n,i)   = grid%lh(ix,iy)
          grid%ts_clw(n,i)  = clw
          grid%ts_rainc(n,i)  = grid%rainc(ix,iy)
@@ -596,6 +598,8 @@ SUBROUTINE calc_ts( grid )
          grid%ts_glw(n,i)  = 1.E30
          grid%ts_gsw(n,i)  = 1.E30
          grid%ts_hfx(n,i)  = 1.E30
+         grid%ts_qfx(n,i)  = 1.E30
+         grid%ts_ust(n,i)  = 1.E30
          grid%ts_lh(n,i)   = 1.E30
          grid%ts_clw(n,i)  = 1.E30
          grid%ts_rainc(n,i)  = 1.E30
@@ -913,6 +917,12 @@ SUBROUTINE write_ts( grid )
    ts_buf(:,:) = grid%ts_tslb(:,:)
    CALL wrf_dm_min_reals(ts_buf(:,:),grid%ts_tslb(:,:),grid%ts_buf_size*grid%max_ts_locs)
 
+   ts_buf(:,:) = grid%ts_qfx(:,:)
+   CALL wrf_dm_min_reals(ts_buf(:,:),grid%ts_qfx(:,:),grid%ts_buf_size*grid%max_ts_locs)
+
+   ts_buf(:,:) = grid%ts_ust(:,:)
+   CALL wrf_dm_min_reals(ts_buf(:,:),grid%ts_ust(:,:),grid%ts_buf_size*grid%max_ts_locs)
+
    DEALLOCATE(ts_buf)
 #endif
 
@@ -934,7 +944,7 @@ SUBROUTINE write_ts( grid )
 
 #if (EM_CORE == 1)
             IF ( model_config_rec%process_time_series == 1 ) THEN
-               WRITE(UNIT=iunit,FMT='(i2,f13.6,i5,i5,i5,1x,14(f13.5,1x))')  &
+               WRITE(UNIT=iunit,FMT='(i2,f13.6,i5,i5,i5,1x,16(f13.5,1x))')  &
                                  grid%id, grid%ts_hour(n,i),                &
                                  grid%id_tsloc(i), ix, iy,                  &
                                  grid%ts_t(n,i),                            &
@@ -950,7 +960,9 @@ SUBROUTINE write_ts( grid )
                                  grid%ts_tslb(n,i),                         &
                                  grid%ts_rainc(n,i),                        &
                                  grid%ts_rainnc(n,i),                       &
-                                 grid%ts_clw(n,i)
+                                 grid%ts_clw(n,i),                          &
+                                 grid%ts_qfx(n,i),                          &
+                                 grid%ts_ust(n,i)
             ELSE
                !!! WRF-Solar diagnostics
                WRITE(UNIT=iunit,FMT='(i2,f13.6,i5,i5,i5,1x,39(f13.5,1x))')  &
