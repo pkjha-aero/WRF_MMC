@@ -26,8 +26,9 @@ include registry.bdy_perturb
 include registry.hyb_coord
 include registry.new3d_wif
 include registry.trad_fields
-include registry.tsout
 include registry.cell_pert
 include registry.mom_pert
 include registry.scpm_jdm
 include registry.slices
+include registry.column_out
+include registry.tsout
