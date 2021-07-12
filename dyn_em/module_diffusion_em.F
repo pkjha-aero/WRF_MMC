@@ -2018,7 +2018,7 @@ SUBROUTINE smag2d_km( config_flags,xkmh,xkmv,xkhh,xkhv,                        &
 !        xkmh(i,k,j)=max(c_s*c_s*mlen_h*mlen_h*tmp, 1.0E-6*mlen_h*mlen_h )
          xkmh(i,k,j)=c_s*c_s*mlen_h*mlen_h*tmp
          xkmh(i,k,j)=min(xkmh(i,k,j), 10.*mlen_h )
-         xkmv(i,k,j)=0.
+         xkmv(i,k,j)=xkmh(i,k,j)               ! v4.2 and later, this is used for hor. diff. of w
          xkhh(i,k,j)=xkmh(i,k,j)/pr
          xkhv(i,k,j)=0.
          IF(config_flags%diff_opt .EQ. 2)THEN
@@ -2036,6 +2036,7 @@ SUBROUTINE smag2d_km( config_flags,xkmh,xkmv,xkhh,xkhv,                        &
              xkmh(i,k,j)=xkmh(i,k,j)/(alpha)
            endif
            xkhh(i,k,j)=xkmh(i,k,j)/pr
+           xkmv(i,k,j)=xkmh(i,k,j)               ! v4.2 and later, this is used for hor. diff. of w
          ENDIF
       ENDDO
       ENDDO
@@ -2865,7 +2866,7 @@ SUBROUTINE horizontal_diffusion_2 ( rt_tendf, ru_tendf, rv_tendf, rw_tendf,    &
                                     div,                                       &
                                     moist, chem, scalar,tracer,                &
                                     msfux, msfuy, msfvx, msfvy,                &
-                                    msftx, msfty, xkmh, xkhh,km_opt,           &
+                                    msftx, msfty, xkmh, xkmv, xkhh, km_opt,    &
                                     rdx, rdy, rdz, rdzw, fnm, fnp,             &
                                     cf1, cf2, cf3, zx, zy, dn, dnw, rho,       &
                                     ids, ide, jds, jde, kds, kde,              &
@@ -2936,6 +2937,7 @@ SUBROUTINE horizontal_diffusion_2 ( rt_tendf, ru_tendf, rv_tendf, rw_tendf,    &
                                                                  defor23, &
                                                                      div, &
                                                                     xkmh, &
+                                                                    xkmv, &
                                                                     xkhh, &
                                                                       zx, &
                                                                       zy, &
@@ -2990,7 +2992,7 @@ SUBROUTINE horizontal_diffusion_2 ( rt_tendf, ru_tendf, rv_tendf, rw_tendf,    &
                                    defor13, defor23, div,                  &
                                    nba_mij, n_nba_mij,                     &
                                    tke(ims,kms,jms),                       &
-                                   msftx, msfty, xkmh, rdx, rdy, fnm, fnp, &
+                                   msftx, msfty, xkmv, rdx, rdy, fnm, fnp, &
                                    dn, zx, zy, rdz, rho,                   &
                                    ids, ide, jds, jde, kds, kde,           &
                                    ims, ime, jms, jme, kms, kme,           &
@@ -3546,7 +3548,7 @@ SUBROUTINE horizontal_diffusion_w_2( tendency, config_flags,              &
                                      nba_mij, n_nba_mij,                  &
                                      tke,                                 &
                                      msftx, msfty,                        &
-                                     xkmh, rdx, rdy, fnm, fnp,            &
+                                     xkmv, rdx, rdy, fnm, fnp,            &
                                      dn, zx, zy, rdz, rho,                &
                                      ids, ide, jds, jde, kds, kde,        &
                                      ims, ime, jms, jme, kms, kme,        &
@@ -3576,7 +3578,7 @@ SUBROUTINE horizontal_diffusion_w_2( tendency, config_flags,              &
                                                                  defor23, &
                                                                      div, &
                                                                      tke, &
-                                                                    xkmh, &
+                                                                    xkmv, &
                                                                       zx, &
                                                                       zy, &
                                                                      rdz, &
@@ -3658,7 +3660,7 @@ SUBROUTINE horizontal_diffusion_w_2( tendency, config_flags,              &
    je_ext=0
    CALL cal_titau_13_31( config_flags, titau1, defor13,   &
                          nba_mij(ims,kms,jms,P_m13),      &
-                         xkmh, fnm, fnp, rho,             &
+                         xkmv, fnm, fnp, rho,             &
                          is_ext, ie_ext, js_ext, je_ext,  &
                          ids, ide, jds, jde, kds, kde,    &
                          ims, ime, jms, jme, kms, kme,    &
@@ -3671,7 +3673,7 @@ SUBROUTINE horizontal_diffusion_w_2( tendency, config_flags,              &
    je_ext=1
    CALL cal_titau_23_32( config_flags, titau2, defor23,   &
                          nba_mij(ims,kms,jms,P_m23),      &
-                         xkmh, fnm, fnp, rho,             &
+                         xkmv, fnm, fnp, rho,             &
                          is_ext, ie_ext, js_ext, je_ext,  &
                          ids, ide, jds, jde, kds, kde,    &
                          ims, ime, jms, jme, kms, kme,    &
@@ -4417,8 +4419,8 @@ SUBROUTINE vertical_diffusion_2   ( ru_tendf, rv_tendf, rw_tendf, rt_tendf,   &
                            v_2(i-1,kts,j  )+          &
                            v_2(i-1,kts,j+1))/4)**2))+epsilon
 
-       tao_xz=cd0*V0_u*u_2(i,kts,j)*(rho(i,kts,j)+rho(i-1,kts,j))/2.
-       ru_tendf(i,kts,j)=ru_tendf(i,kts,j) +   g*tao_xz/dnw(kts)
+       tao_xz=cd0*V0_u*u_2(i,kts,j)
+       ru_tendf(i,kts,j)=ru_tendf(i,kts,j) +   g*tao_xz*0.5*(rho(i,kts,j)+rho(i-1,kts,j))/dnw(kts)
        IF ( (config_flags%m_opt .EQ. 1) .OR. (config_flags%sfs_opt .GT. 0) ) THEN
           nba_mij(i,kts,j,P_m13) = -tao_xz
        ENDIF
@@ -4435,8 +4437,8 @@ SUBROUTINE vertical_diffusion_2   ( ru_tendf, rv_tendf, rw_tendf, rt_tendf,   &
                            u_2(i+1,kts,j  )+          &
                            u_2(i+1,kts,j-1))/4)**2))+epsilon
 
-       tao_yz=cd0*V0_v*v_2(i,kts,j)*(rho(i,kts,j)+rho(i,kts,j-1))/2.
-       rv_tendf(i,kts,j)=rv_tendf(i,kts,j) +   g*tao_yz/dnw(kts)
+       tao_yz=cd0*V0_v*v_2(i,kts,j)
+       rv_tendf(i,kts,j)=rv_tendf(i,kts,j) +   g*tao_yz*0.5*(rho(i,kts,j)+rho(i,kts,j-1))/dnw(kts)
        IF ( (config_flags%m_opt .EQ. 1) .OR. (config_flags%sfs_opt .GT. 0) ) THEN
           nba_mij(i,kts,j,P_m23) = -tao_yz
        ENDIF
@@ -4455,8 +4457,8 @@ SUBROUTINE vertical_diffusion_2   ( ru_tendf, rv_tendf, rw_tendf, rt_tendf,   &
                            v_2(i-1,kts,j+1))/4)**2))+epsilon
        ustar=0.5*(ust(i,j)+ust(i-1,j))
 
-       tao_xz=ustar*ustar*u_2(i,kts,j)*(rho(i,kts,j)+rho(i-1,kts,j))/(2.*V0_u)
-       ru_tendf(i,kts,j)=ru_tendf(i,kts,j) +   g*tao_xz/dnw(kts)
+       tao_xz=ustar*ustar*u_2(i,kts,j)/V0_u
+       ru_tendf(i,kts,j)=ru_tendf(i,kts,j) +   g*tao_xz*0.5*(rho(i,kts,j)+rho(i-1,kts,j))/dnw(kts)
        IF ( (config_flags%m_opt .EQ. 1) .OR. (config_flags%sfs_opt .GT. 0) ) THEN
           nba_mij(i,kts,j,P_m13) = -tao_xz
        ENDIF
@@ -4474,8 +4476,8 @@ SUBROUTINE vertical_diffusion_2   ( ru_tendf, rv_tendf, rw_tendf, rt_tendf,   &
                            u_2(i+1,kts,j-1))/4)**2))+epsilon
        ustar=0.5*(ust(i,j)+ust(i,j-1))
 
-       tao_yz=ustar*ustar*v_2(i,kts,j)*(rho(i,kts,j)+rho(i,kts,j-1))/(2.*V0_v)
-       rv_tendf(i,kts,j)=rv_tendf(i,kts,j) +   g*tao_yz/dnw(kts)
+       tao_yz=ustar*ustar*v_2(i,kts,j)/V0_v
+       rv_tendf(i,kts,j)=rv_tendf(i,kts,j) +   g*tao_yz*0.5*(rho(i,kts,j)+rho(i,kts,j-1))/dnw(kts)
        IF ( (config_flags%m_opt .EQ. 1) .OR. (config_flags%sfs_opt .GT. 0) ) THEN
           nba_mij(i,kts,j,P_m23) = -tao_yz
        ENDIF

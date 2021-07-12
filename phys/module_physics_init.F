@@ -252,6 +252,7 @@ CONTAINS
                          ,G_URB2D_mosaic,RN_URB2D_mosaic                                                      & ! danli mosaic 
                          ,TS_URB2D_mosaic                                                                     & ! danli mosaic 
                          ,TS_RUL2D_mosaic                                                                     & ! danli mosaic
+                         ,irr_rand_field,irr_ph,irr_freq                                                      &
 #if ( EM_CORE == 1 )
                          ,QR_CU,QS_CU,NC_CU,NI_CU,NR_CU,NS_CU,CCN_CU              & ! TWG
                          ,alevsiz_cu,num_months,no_src_types_cu,aeromcu,aeropcu   & ! PSH/TWG 06/10/16                         
@@ -843,6 +844,9 @@ CONTAINS
 ! End of Noah-mosaic 
 !-------------------------------------------------  
    
+! IRRIGATION
+  INTEGER,OPTIONAL,INTENT(OUT), DIMENSION( ims:ime,jms:jme):: irr_rand_field 
+  INTEGER, OPTIONAL :: irr_ph,irr_freq 
 !-----------------------------------------------------------------
 
 #if ( EM_CORE == 1 )
@@ -938,7 +942,23 @@ CONTAINS
       has_reqs = 0
    end if
 
-   ENDIF
+! If using FARMS (swint_opt==2), we need both effective radii and the mass
+! for cloud, ice, and snow.
+
+   IF ( config_flags%swint_opt .eq. 2 ) THEN
+      IF ( ( has_reqc .EQ. 1 ) .AND. &
+           ( has_reqi .EQ. 1 ) .AND. &
+           ( has_reqs .EQ. 1 ) .AND. &
+           ( f_qc            ) .AND. &
+           ( f_qi            ) .AND. &
+           ( f_qs            ) ) THEN
+         !  everything is A-OK for FARMS
+      ELSE
+         CALL wrf_error_fatal ('--- ERROR: FARMS (swint_opt==2) requires a different MP scheme')
+      END IF
+   END IF
+
+   ENDIF ! use_mp_re .EQ. 1
 
 !-- should be from the namelist
 
@@ -1451,6 +1471,7 @@ CONTAINS
                 ,G_URB2D_mosaic,RN_URB2D_mosaic                 &  !danli mosaic 
                 ,TS_URB2D_mosaic                                &  !danli mosaic 
                 ,TS_RUL2D_mosaic                                &  !danli mosaic 
+                ,irr_rand_field,irr_ph,irr_freq                 &
                ) 
 
    CALL wrf_debug ( 200 , 'module_start: phy_init: Before call to cu_init' )
@@ -2459,6 +2480,7 @@ CONTAINS
                 ,G_URB2D_mosaic,RN_URB2D_mosaic                 &  !danli mosaic 
                 ,TS_URB2D_mosaic                                &  !danli mosaic 
                 ,TS_RUL2D_mosaic                                &  !danli mosaic  
+                ,irr_rand_field,irr_ph,irr_freq                 &
                                                                 ) !Optional oml
 !--------------------------------------------------------------------
    USE module_sf_sfclay
@@ -2874,6 +2896,9 @@ CONTAINS
 ! End of Noah-mosaic related variables 
 !-------------------------------------------------  
 
+! IRRIGATION
+  INTEGER,OPTIONAL,INTENT(OUT), DIMENSION( ims:ime,jms:jme):: irr_rand_field  
+  INTEGER,OPTIONAL :: irr_ph,irr_freq       
 #if ( EM_CORE == 1 )
 !local mynn 
    INTEGER :: mynn_closure_level
@@ -3052,9 +3077,11 @@ CONTAINS
                      SNOALB, FNDSOILW, FNDSNOWH, RDMAXALB,     &
                      num_soil_layers, restart,                 &
                      allowed_to_read ,                         &
+                     irr_rand_field,irr_ph,irr_freq,           &
                      ids,ide, jds,jde, kds,kde,                &
                      ims,ime, jms,jme, kms,kme,                &
-                     its,ite, jts,jte, kts,kte                 )
+                     its,ite, jts,jte, kts,kte                 &
+                     )
 
 
 !URBAN
@@ -3256,6 +3283,7 @@ CALL lsm_mosaic_init(IVGTYP,config_flags%ISWATER,config_flags%ISURBAN,config_fla
                      SNOALB, FNDSOILW, FNDSNOWH, RDMAXALB,     &
                      num_soil_layers, restart,                 &
                      allowed_to_read ,                         &
+                     irr_rand_field,irr_ph,irr_freq,           &
                      ids,ide, jds,jde, kds,kde,                &
                      ims,ime, jms,jme, kms,kme,                &
                      its,ite, jts,jte, kts,kte                 )
@@ -4081,7 +4109,9 @@ CALL lsm_mosaic_init(IVGTYP,config_flags%ISWATER,config_flags%ISURBAN,config_fla
 #endif
    USE module_mp_thompson
    USE module_mp_full_sbm
+#if (BUILD_SBM_FAST == 1)
    USE module_mp_fast_sbm
+#endif
    USE module_mp_morr_two_moment
    USE module_mp_p3
    USE module_mp_jensen_ishmael
@@ -4272,10 +4302,12 @@ CALL lsm_mosaic_init(IVGTYP,config_flags%ISWATER,config_flags%ISURBAN,config_fla
      IF(start_of_simulation.or.restart)THEN
           CALL full_hucminit(dt)
      END IF
-    CASE (FAST_KHAIN_LYNN)
+# if (BUILD_SBM_FAST == 1)
+    CASE (FAST_KHAIN_LYNN_SHPUND)
      IF(start_of_simulation.or.restart)THEN
           CALL fast_hucminit(dt)
      END IF
+# endif
 #endif
      CASE (NSSL_1MOMLFO)
          CALL nssl_2mom_init(ims,ime, jms,jme, kms,kme,nssl_params,ipctmp=0,mixphase=0,ihvol=-1) ! no separate hail
@@ -5274,12 +5306,21 @@ subroutine interp_vec_cu(locvec,locwant,periodic,loc1,loc2,wght1,wght2)
 
      integer :: i, j
 
+#if 0
      do j = jts, min(jde-1,jte)
         do i = its, min(ide-1,ite)
            area2d(i,j) = dx/msftx(i,j) * dy/msfty(i,j)
            dx2d  (i,j) = sqrt ( area2d(i,j) )
         end do
      end do
+#else
+     do j = jts, min(jde-1,jte)
+        do i = its, min(ide-1,ite)
+           area2d(i,j) = dx * dy
+           dx2d  (i,j) = dx
+        end do
+     end do
+#endif
 
   end subroutine compute_2d_dx_area
 
