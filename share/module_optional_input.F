@@ -762,6 +762,16 @@ USE module_io_domain
          flag_lake_depth      = itmp
       END IF
 
+      flag_name = '                                                                                '
+
+      flag_bathymetry      = 0
+
+      flag_name(1:10) = 'BATHYMETRY'
+      CALL wrf_get_dom_ti_integer ( fid, 'FLAG_' // flag_name, itmp, 1, icnt, ierr )
+      IF ( ierr .EQ. 0 ) THEN
+         flag_bathymetry      = itmp
+      END IF
+
 
       ! PSH
       flag_bathymetry      = 0 
