@@ -25,7 +25,6 @@ CONTAINS
                      ims,ime, jms,jme, kms,kme,                    &
                      its,ite, jts,jte, kts,kte,                    &
                      ustm,ck,cka,cd,cda,isftcflx,iz0tlnd,          &
-                     use_bathymetry,water_depth,                   & ! PSH
                      scm_force_flux                                )
      
 !-------------------------------------------------------------------
@@ -197,8 +196,6 @@ CONTAINS
       INTEGER,  OPTIONAL,  INTENT(IN )   ::     ISFTCFLX, IZ0TLND
       INTEGER,  OPTIONAL,  INTENT(IN )   ::     SCM_FORCE_FLUX
 
-      INTEGER,  OPTIONAL,  INTENT(IN )   ::     use_bathymetry ! PSH
-      REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(IN)  :: water_depth ! PSH
 ! LOCAL VARS
 
       REAL,     DIMENSION( its:ite ) ::                       U1D, &
@@ -240,7 +237,6 @@ CONTAINS
                 GZ1OZ0(ims,j),WSPD(ims,j),BR(ims,j),ISFFLX,DX,     &
                 SVP1,SVP2,SVP3,SVPT0,EP1,EP2,KARMAN,EOMEG,STBOLT,  &
                 P1000mb,                                           &
-                use_bathymetry,water_depth(ims,j),                 & ! PSH
                 ids,ide, jds,jde, kds,kde,                         &
                 ims,ime, jms,jme, kms,kme,                         &
                 its,ite, jts,jte, kts,kte                          &
@@ -265,7 +261,6 @@ CONTAINS
                      SVP1,SVP2,SVP3,SVPT0,EP1,EP2,                 &
                      KARMAN,EOMEG,STBOLT,                          &
                      P1000mb,                                      &
-                     use_bathymetry,water_depth,                   & ! PSH
                      ids,ide, jds,jde, kds,kde,                    &
                      ims,ime, jms,jme, kms,kme,                    &
                      its,ite, jts,jte, kts,kte,                    &
@@ -330,8 +325,6 @@ CONTAINS
 
       REAL,     INTENT(IN   )               ::   CP,G,ROVCP,R,XLV,DX
 
-      INTEGER,  OPTIONAL,  INTENT(IN )   ::     use_bathymetry ! PSH
-      REAL, OPTIONAL, DIMENSION( ims:ime ), INTENT(IN)  :: water_depth ! PSH
 ! MODULE-LOCAL VARIABLES, DEFINED IN SUBROUTINE SFCLAY
       REAL,     DIMENSION( its:ite ),  INTENT(IN   )   ::  dz8w1d
 
@@ -993,14 +986,10 @@ CONTAINS
 !         ZNT(I)=CZO*UST(I)*UST(I)/G+OZO                                   
 ! PSH - formulation for depth-dependent roughness from
 ! ... Jimenez and Dudhia, 2018
-          IF ( use_bathymetry .eq. 1 ) THEN
-             ZNT(I) = depth_dependent_z0(water_depth(I),ZNT(I),UST(I))  
-          ELSE
 ! Since V3.7 (ref: EC Physics document for Cy36r1)
               ZNT(I)=CZO*UST(I)*UST(I)/G+0.11*1.5E-5/UST(I)
 ! V3.9: Add limit as in isftcflx = 1,2
               ZNT(I)=MIN(ZNT(I),2.85e-3)
-          ENDIF
 ! COARE 3.5 (Edson et al. 2013)
 !         CZC = 0.0017*WSPD(I)-0.005
 !         CZC = min(CZC,0.028)
@@ -1231,7 +1220,7 @@ CONTAINS
       real    :: rzol
         nzol = int(zolf*100.)
         rzol = zolf*100. - nzol
-        if(nzol+1 .le. 1000)then
+        if(nzol+1 .lt. 1000)then
            psim_stable = psim_stab(nzol) + rzol*(psim_stab(nzol+1)-psim_stab(nzol))
         else
            psim_stable = psim_stable_full(zolf)
@@ -1244,7 +1233,7 @@ CONTAINS
       real    :: rzol
         nzol = int(zolf*100.)
         rzol = zolf*100. - nzol
-        if(nzol+1 .le. 1000)then
+        if(nzol+1 .lt. 1000)then
            psih_stable = psih_stab(nzol) + rzol*(psih_stab(nzol+1)-psih_stab(nzol))
         else
            psih_stable = psih_stable_full(zolf)
@@ -1257,7 +1246,7 @@ CONTAINS
       real    :: rzol
         nzol = int(-zolf*100.)
         rzol = -zolf*100. - nzol
-        if(nzol+1 .le. 1000)then
+        if(nzol+1 .lt. 1000)then
            psim_unstable = psim_unstab(nzol) + rzol*(psim_unstab(nzol+1)-psim_unstab(nzol))
         else
            psim_unstable = psim_unstable_full(zolf)
@@ -1270,7 +1259,7 @@ CONTAINS
       real    :: rzol
         nzol = int(-zolf*100.)
         rzol = -zolf*100. - nzol
-        if(nzol+1 .le. 1000)then
+        if(nzol+1 .lt. 1000)then
            psih_unstable = psih_unstab(nzol) + rzol*(psih_unstab(nzol+1)-psih_unstab(nzol))
         else
            psih_unstable = psih_unstable_full(zolf)
@@ -1278,20 +1267,6 @@ CONTAINS
       return
       end function
 
-     function depth_dependent_z0(water_depth,z0,UST)
-     real :: depth_b
-     real :: effective_depth
-        IF ( water_depth .lt. 10.0 ) THEN
-          effective_depth = 10.0 
-        ELSEIF ( water_depth .gt. 100.0 ) THEN
-          effective_depth = 100.0
-        ENDIF
-              
-        depth_b = 1 / 30.0 * log (1260.0 / effective_depth)
-        depth_dependent_z0 = exp((2.7 * ust - 1.8 / depth_b) / (ust + 0.17 / depth_b) )
-        depth_dependent_z0 = MIN(z0,0.1)     
-    return
-    end function
 !-------------------------------------------------------------------          
 
 END MODULE module_sf_sfclayrev
