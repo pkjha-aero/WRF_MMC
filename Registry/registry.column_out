@@ -1,0 +1,31 @@
+# registry.column_out
+#
+# Write 1D column output to a separate file. Jeff Mirocha (LLNL) May 2021
+#
+state    real   ucol      k    misc    1    -    h4    "ucol"      "u (x) velocity at mass points"          "m s-1"
+state    real   vcol      k    misc    1    -    h4    "vcol"      "v (y) velocity at mass points"          "m s-1"
+state    real   wcol      k    misc    1    z    h4    "wcol"      "w (z) velocity at mass points"          "m s-1"
+state    real   tcol      k    misc    1    -    h4    "tcol"      "theta at mass points"                   "m s-1"
+state    real   pcol      k    misc    1    -    h4    "pcol"      "p at mass points"                       "Pa"
+
+state    real   t11col    k    misc    1    -    h4    "t11col"    "sgs uu momentum flux at mass points"    "m2 s-2"
+state    real   t22col    k    misc    1    -    h4    "t22col"    "sgs vv momentum flux at mass points"    "m2 s-2"
+state    real   t33col    k    misc    1    -    h4    "t33col"    "sgs ww momentum flux at mass points"    "m2 s-2"
+state    real   t12col    k    misc    1    -    h4    "t12col"    "sgs uv momentum flux at mass points"    "m2 s-2"
+state    real   t13col    k    misc    1    z    h4    "t13col"    "sgs uw momentum flux at eta points"     "m2 s-2"
+state    real   t23col    k    misc    1    z    h4    "t23col"    "sgs vw momentum flux at eta points"     "m2 s-2"
+state    real   tkecol    k    misc    1    -    h4    "tkecol"    "TKE at mass points"                     "m2 s-2"
+state    real   h3col     k    misc    1    z    h4    "h3col"     "sgs wt heat flux at eta points"         "K m s-1"
+
+state    real   zcol      k    misc    1    z    h4    "zcol"      "z at eta points"                        "m" 
+
+state    real   uscol     -    misc    1    -    h4    "uscol"     "surface u* at eta point"                "m2 s-2"
+state    real   z0col     -    misc    1    -    h4    "z0col"     "z0 at eta point"                        "m"
+
+rconfig    integer   column_out_opt    namelist,dynamics    max_domains    0    -    "column_out_opt"    "1 to enable column output"    " "
+rconfig    integer   column_out_i      namelist,dynamics    max_domains    1    -    "column_out_i"      "column output i index"    " "
+rconfig    integer   column_out_j      namelist,dynamics    max_domains    1    -    "column_out_j"      "column output j index"    " "
+
+package  no_column_out  column_out_opt==0   -                 -
+package  column_out     column_out_opt==1   -                 state:ucol,vcol,wcol,tcol,pcol,t11col,t22col,t33col,t12col,t13col,t23col,tkecol,h3col,zcol,uscol,z0col
+
