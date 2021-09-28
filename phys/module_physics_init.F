@@ -3173,7 +3173,13 @@ CONTAINS
 
         CASE (MYNNSFCSCHEME)
 
-           CALL mynn_sf_init_driver(allowed_to_read)
+           CALL mynn_sf_init_driver(allowed_to_read,                &
+                                ims,ime,jms,jme,                    &
+                                its,ite,jts,jte,                    &
+                                bathymetry_flag, shalwater_rough,   &
+                                shalwater_depth, water_depth,       &
+                                xland,LakeModel,lake_depth,lakemask )
+
            isfc=5
 !          isfc=3
 
