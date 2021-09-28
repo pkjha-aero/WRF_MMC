@@ -2496,7 +2496,8 @@ e    &           ,htmx,croplive,gdd1020,gdd820,gdd020,grainc,grainc_storage  &
                ids,ide, jds,jde, kds,kde,                          &
                ims,ime, jms,jme, kms,kme,                          &
                i_start(ij),i_end(ij),j_start(ij),j_end(ij),kts,kte,&   
-               ustm,ck,cka,cd,cda,isftcflx,iz0tlnd                 )
+               ustm,ck,cka,cd,cda,isftcflx,iz0tlnd,                &
+               shalwater_rough,shalwater_depth,water_depth         )
          ELSE
           CALL SFCLAY_mynn(u_phytmp,v_phytmp,t_phy,qv_curr,        &
                p_phy,dz8w,cp,g,rcp,r_d,xlv,psfc,chs,chs2,cqs2,cpm, &
@@ -2510,7 +2511,8 @@ e    &           ,htmx,croplive,gdd1020,gdd820,gdd020,grainc,grainc_storage  &
                ids,ide, jds,jde, kds,kde,                          &
                ims,ime, jms,jme, kms,kme,                          &
                i_start(ij),i_end(ij),j_start(ij),j_end(ij),kts,kte,&
-               ustm,ck,cka,cd,cda,isftcflx,iz0tlnd                 )
+               ustm,ck,cka,cd,cda,isftcflx,iz0tlnd,                &
+               shalwater_rough,shalwater_depth,water_depth         )
          ENDIF
        ELSE
           CALL wrf_error_fatal('Lacking arguments for SFCLAY_mynn in surface driver')
@@ -5363,7 +5365,8 @@ e    &           ,htmx,croplive,gdd1020,gdd820,gdd020,grainc,grainc_storage  &
               ids,ide, jds,jde, kds,kde,                           &
               ims,ime, jms,jme, kms,kme,                           &
               its,ite, jts,jte, kts,kte,                           &
-              ustm,ck,cka,cd,cda,isftcflx,iz0tlnd                  )
+              ustm,ck,cka,cd,cda,isftcflx,iz0tlnd,                 &
+              shalwater_rough,shalwater_depth,water_depth          )
 
      USE module_sf_mynn
 
@@ -5431,6 +5434,9 @@ e    &           ,htmx,croplive,gdd1020,gdd820,gdd020,grainc,grainc_storage  &
      REAL,     DIMENSION( ims:ime, jms:jme )                    , &
                INTENT(OUT), OPTIONAL  ::      ck,cka,cd,cda,ustm
 
+     INTEGER,  OPTIONAL,  INTENT(IN )   ::     shalwater_rough
+     REAL,     OPTIONAL,  INTENT(IN )   ::     shalwater_depth
+     REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(IN)  :: water_depth
 !--------------------------------------------------------------------
 !    New for wrapper
 !--------------------------------------------------------------------
@@ -5542,7 +5548,8 @@ e    &           ,htmx,croplive,gdd1020,gdd820,gdd020,grainc,grainc_storage  &
           ids,ide, jds,jde, kds,kde,                          &
           ims,ime, jms,jme, kms,kme,                          &
           its,ite, jts,jte, kts,kte,                          &
-          ustm,ck,cka,cd,cda,isftcflx,iz0tlnd                 )
+          ustm,ck,cka,cd,cda,isftcflx,iz0tlnd,                &
+          shalwater_rough,shalwater_depth,water_depth         )
 
 
      ! Set up lower boundary conditions to force an open-water call
@@ -5610,7 +5617,7 @@ e    &           ,htmx,croplive,gdd1020,gdd820,gdd020,grainc,grainc_storage  &
                ims,ime, jms,jme, kms,kme,                          &
                its,ite, jts,jte, kts,kte,                          &
                ustm_sea,ck_sea,cka_sea,cd_sea,cda_sea,isftcflx,    &
-               iz0tlnd                                             )
+               iz0tlnd,shalwater_rough,shalwater_depth,water_depth )
 
      DO j = JTS , JTE
         DO i = ITS, ITE
