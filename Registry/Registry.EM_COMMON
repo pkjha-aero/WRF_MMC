@@ -2359,7 +2359,8 @@ rconfig   integer   num_moves       namelist,domains    1                0
 rconfig   integer   ts_buf_size     namelist,domains    1                200          -       "ts_buf_size"   "Size of time series buffer"
 rconfig   integer   max_ts_locs     namelist,domains    1                5            -       "max_ts_locs"   "Maximum number of time series locations"
 rconfig   logical   tslist_ij             derived       1              .false. rh  "tslist_ij"    "Use i,j locations in tslist"   ""
-rconfig   logical   tslist_unstagger_winds   namelist,domains    1              .false. rh  "tslist_unstagger_winds"    "interpolate u and v to cell centers"   ""
+rconfig   logical   tslist_unstagger_winds   namelist,domains    1     .false. rh  "tslist_unstagger_winds"    "interpolate u and v to cell centers"   ""
+rconfig   integer   tslist_turbulent_output  namelist,domains    1     0       rh  "tslist_turbulent_output"         "output TKE/flux variables"   ""
 rconfig   integer   vortex_interval  namelist,domains   max_domains      15  -  "" "" "minutes"
 rconfig   integer   max_vortex_speed namelist,domains   max_domains      40  -  "" "" "meters per second"
 rconfig   integer   corral_dist     namelist,domains    max_domains      8
