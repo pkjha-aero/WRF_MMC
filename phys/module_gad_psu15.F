@@ -182,7 +182,7 @@ FUNCTION calc_fnft_psu15( v0, rho, blades, bladelen, diameter,           &
 
   IF (radius .LT. radmax) THEN !JDM
      
-     IF (radius .GE. radmin) THEN !JDM
+     IF (radius .GT. radmin) THEN !JDM    !! MSG CHANGED .GE. TO .GT. TO AVOID MAKING CALCULATIONS OUTSIDE THE BLADE
 
         an = 0.0
         at = 0.0
@@ -294,7 +294,7 @@ FUNCTION calc_fnft_psu15( v0, rho, blades, bladelen, diameter,           &
              an = 0.0
              at = 0.0
 
-print*,'what am I doing in here???'
+!print*,'what am I doing in here???'
 
           endif
 
@@ -437,7 +437,7 @@ FUNCTION calc_twist_psu15( x ) RESULT( twist )
      
      IF ( x .GT. r(ns-1) ) THEN
         PRINT*,'—————————————'
-        PRINT*,'radius >  blade length in calc_twist_psu15.pro'
+        PRINT*,'radius (',x,') >  blade length (',r(ns-1),') in calc_twist_psu15.pro'
         PRINT*,'—————————————'
         STOP
      ENDIF 
@@ -602,7 +602,7 @@ FUNCTION calc_cl_psu15( x,y ) RESULT( cl )
   
   IF ( x .LT. r(0) ) THEN 
      PRINT*,'—————————————'
-     PRINT*,'radius less than blade root in calc_cl_psu15.pro'
+     PRINT*,'radius',x,' less than blade root',r(0),' in calc_cl_psu15.pro'
      PRINT*,'—————————————'
      STOP
   ENDIF

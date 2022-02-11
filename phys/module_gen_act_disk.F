@@ -5,23 +5,21 @@ MODULE module_gen_act_disk
 USE module_llxy
 
 !RSA for turbine-specific functions
-!PKJ: For now this is fine , but it would be ideal to read the turbine details from files 
-!     instead of having a function for each turbine
 USE module_gad_psu15, ONLY: calc_rpm_psu15, calc_pitch_psu15, calc_fnft_psu15
 USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
 
 #ifdef DM_PARALLEL
-  USE MODULE_DM ! DOMAIN for MPI decomposition
+  USE MODULE_DM
 #endif
   
   CONTAINS
     
   SUBROUTINE gen_act_disk ( ru_tendf, rv_tendf, rw_tendf, &
-                            wp_opt,                       & !PKJ: for?
+                            wp_opt,                       & 
                             turbine_opt,                  & !RSA
                             windturb_spec,                & !RSA
                             turb_loc_in_latlon,           & !RSA
-                            truelat1, truelat2,           & !RSA, PKJ: What is this for? Why two lat? As per WRF stabdrad code...need to look at example code.
+                            truelat1, truelat2,           & !RSA
                             stand_lon,                    & !RSA
                             n_turbines,                   &
                             n_timeseries,                 &
@@ -32,23 +30,23 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
                             hub_height,                   &
                             rotor_diameter,               &
                             blade_length,                 &
-                            theta_turbine,                & !PKJ: Angle of rotor plane
+                            theta_turbine,                &
                             cutinspd, cutoutspd,          & !RSA
-                            turb_power,                   & !RSA, PKJ: this may not be needed
+                            turb_power,                   & !RSA
                             acc_yaw_err,                  & 
-                            wp_acc_u, wp_acc_v, wp_acc_w, & !PKJ: these variables likely not needed. 
-                            wp_ts,                        & !PKJ: for diagnostic as mentioned later. We can probably remove this
+                            wp_acc_u, wp_acc_v, wp_acc_w, & ! these variables likely not needed. 
+                            wp_ts,                        &
                             thrust, torque,               &
-                            rotrate, power,               & !PKJ: Check if "power" and "turb_power" are for the same purpose. Is "rotrate" same as "omega"? This could have been replaced by "omega"...ensure that
+                            rotrate, power,               &
                             u, v, w,                      &
                             muu, muv, mut,                &
                             rdzw,  dx, dy, dt,            &
-                            v0t, d0t, itimestep,          & 
+                            v0t, d0t, itimestep,          &
                             xlat_v, xlong_u, hgt,         & !RSA
                             fnm, fnp,                     & !RSA
-                            ids, ide, jds, jde, kds, kde, & ! Not related to staggered grid dc from Jeff
-                            ims, ime, jms, jme, kms, kme, & ! ims -  x-dir, mpi, start
-                            ips, ipe, jps, jpe, kps, kpe, & ! d- domain, m - mpi, p- patches, t -tile, patches and tiles are identical for now.
+                            ids, ide, jds, jde, kds, kde, &
+                            ims, ime, jms, jme, kms, kme, &
+                            ips, ipe, jps, jpe, kps, kpe, &
                             its, ite, jts, jte, kts, kte  )
 
 !-----------------------------------------------------------------------------
@@ -61,7 +59,7 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
 !
 ! Lookup tables use generic Penn State 1.5 MW GE SLE turbine (approximate).
 !
-! Note that wind direction and turbine yaw (better call it theta ??) are measured counterclockwise from
+! Note that wind direction and turbine yaw are measured counterclockwise from
 ! 0 deg. for a westerly wind / west-facing turbine. Thus, 90 is a southerly
 ! wind / south-facing turbine, 180 is an easterly wind / east-facing turbine,
 ! 270 is a northerly wind / north-facing turbine, up to 360 deg.
@@ -70,10 +68,8 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
 ! - Code will not compute GAD forces if flow is from behind the turbine; turbine
 ! must first yaw into mean flow direction (when yaw error exceeds threshold) 
 ! before forces will be calculated.
-! PKJ: why do we need this? ...Difference between the yaw and inflow vector.
 ! - Added ability specify upwind distance for turbine inflow calculation relative 
 ! to turbine hub.
-! PKJ: Are we using something like 2D upstream? We have this as an input
 ! - Added ability to read in turbine info from a file specifying turbine
 ! parameters, including position in either x,y or lat,lon.
 !
@@ -81,25 +77,22 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
 
   IMPLICIT NONE
 
-#ifdef DM_PARALLEL
-  INCLUDE 'mpif.h'
+#if defined(DM_PARALLEL) && !defined(STUBMPI)
+  INCLUDE "mpif.h" ! MSG TESTING
 #endif
 
-  ! PKJ: Why is the order i, k, j and not i, j, k?
-  REAL, DIMENSION( ims:ime, kms:kme, jms:jme ),  INTENT(INOUT) & ! PKJ: "tendency"?
-  :: ru_tendf    & ! u tendency * mass                   (kg s-4) ! PKJ--(1/s)*(kg/m/s^2)*(m/s)
+  REAL, DIMENSION( ims:ime, kms:kme, jms:jme ),  INTENT(INOUT) &
+  :: ru_tendf    & ! u tendency * mass                   (kg s-4)
    , rv_tendf    & ! v
    , rw_tendf      ! w
-   
-  ! PKJ: Why is the order i, k, j and not i, j, k?
+  
   REAL, DIMENSION( ims:ime, kms:kme, jms:jme ),  INTENT(INOUT) &
   :: wp_acc_u    & ! acceleration for u                  (m s-2)
    , wp_acc_v    & !                  v                  (m s-2)
    , wp_acc_w      !                  w                  (m s-2)
  
-  ! PKJ: Why is the order i, k, j and not i, j, k?
   REAL, DIMENSION( ims:ime, kms:kme, jms:jme ),  INTENT(INOUT) & 
-  :: wp_ts         ! diagnostic for debuging, PKJ: We can remove this
+  :: wp_ts         ! diagnostic for debuging
 
   INTEGER,                                       INTENT( IN  ) &  
   :: n_turbines    ! number of turbines
@@ -118,7 +111,6 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
 
   REAL,                                          INTENT( IN  ) &
   :: truelat1, truelat2, stand_lon !RSA for converting lat/lon to x/y
-  ! PKJ: why do we need truelat1 as well as truelat2?
 
   REAL, DIMENSION( ims:ime, jms:jme ),           INTENT( IN  ) &
   :: xlat_v, xlong_u !RSA for converting lat/lon to x/y
@@ -139,32 +131,28 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
   REAL, DIMENSION( n_turbines ),                 INTENT(INOUT) & 
   ::  acc_yaw_err
 
-  ! PKJ: Why is this a 2-D array?
   REAL, DIMENSION( ims:ime, jms:jme ),            INTENT( OUT ) &
-  :: thrust, torque, rotrate, power ! PKJ: These might not be needed
+  :: thrust, torque, rotrate, power
 
    REAL, DIMENSION( n_timeseries, n_turbines ),   INTENT(INOUT) &
-  :: v0t          & ! Wind speed time series               (m s-1)
-   , d0t            ! Wind direction time series.            (deg)
-                    ! 0 is north, positive rotating clockwise  ! Standard met terms
+  :: v0t          & ! Wind speed timeseries               (m s-1)
+   , d0t            ! Wind direction timeseries.            (deg)
+                    ! 0 is north, positive rotating clockwise  
 
   REAL, DIMENSION( ims:ime, kms:kme, jms:jme ),  INTENT( IN  ) &
   :: u           & ! u-velocity                  (m s-1)
    , v           & ! v
    , w             ! w
 
-  ! PKJ: Is this same as dynamic viscosity? Doesn't it vary in the k-direction?
   REAL, DIMENSION( ims:ime, jms:jme ),           INTENT( IN  ) &
   :: muu         & ! column pressure at u nodes  (kg m-1 s-2)
    , muv         & !                    v
    , mut         & !                    t
-   , hgt           ! RSA terrain height above MSL (m) 
+   , hgt           ! RSA terrain height          (m)
 
-  !PKJ: Initial vertical velocity profile?
   REAL, DIMENSION( kms:kme ),                    INTENT( IN  ) &
   :: fnm, fnp      ! RSA for v0_w calculation
 
-  ! PKJ: Note "r" in "rdzw" meant for reciprocal
   REAL, DIMENSION( ims:ime, kms:kme, jms:jme ),  INTENT( IN  ) &
   :: rdzw          !inverse vertical grid spacing at w-nodes (m-1)
 
@@ -176,7 +164,7 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
   :: dt
 
   INTEGER,                                       INTENT( IN  ) & !JDM May 2, 2013
-  :: itimestep									! may not be needed
+  :: itimestep
 
   INTEGER,                                       INTENT( IN  ) &
   :: ids, ide, jds, jde, kds, kde   &
@@ -196,16 +184,13 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
    , v_y         & !                v       (m)
    , w_y           !                w       (m)
 
-  ! PKJ: Why a 3-D array?
   REAL, DIMENSION( its:ite+1, kts:kte, jts:jte+1 ) &
   :: u_z         & !z coordinate of u-nodes (m)
    , v_z           !                v       (m)
    
-  ! PKJ: Why a 3-D array?
-  ! PKJ: what are c-nodes? Related to column mass
   REAL, DIMENSION( its-1:ite+1, kts:kte, jts-1:jte+1 ) &
-  :: w_z         & !z coordinate of w-nodes  (m) ! Grid point (node)
-   , c_z           !z coordinate of c-nodes  (m) ! Like w_z but at celle centers (at half level)
+  :: w_z         & !z coordinate of w-nodes  (m)
+   , c_z           !z coordinate of c-nodes  (m) 
 
   REAL, DIMENSION( its:ite, jts:jte ) &
   :: dru       & !normal distance from u-nodes to the rotor plane (m)
@@ -218,7 +203,7 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
    , daw         !                     w                              (m)
 
   REAL, DIMENSION( its-1:ite+1, kts:kte, jts-1:jte+1 ) &
-  :: dzu       & !normal distance from u-nodes to the rotor plane (m) !PKJ:: Shouldn't it be vertical distance from rotor axis line? How are these different from dru, drv, drw? Check back later
+  :: dzu       & !normal distance from u-nodes to the rotor plane (m)
    , dzv       & !                    v                           (m)
    , dzw       & !                    w                           (m)
    , dzc         !                    c                           (m)
@@ -257,8 +242,8 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
   INTEGER         :: status(MPI_STATUS_SIZE)
 #endif
 
-  REAL, DIMENSION(n_turbines) :: v0n ! PKJ: Initial wind speeds at the turbines
-  REAL, DIMENSION(n_turbines) :: d0n ! PKJ: Initial wind directions at the turbines
+  REAL, DIMENSION(n_turbines) :: v0n
+  REAL, DIMENSION(n_turbines) :: d0n
   INTEGER, DIMENSION(n_turbines) :: yawing
 
 
@@ -283,9 +268,9 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
   INTEGER, DIMENSION(n_turbines) :: turbine_on_patch
   INTEGER, DIMENSION(n_turbines) :: inflow_on_patch
   REAL, DIMENSION(n_turbines) :: turb_power_local !turbine power calculation on local processor
-  REAL, DIMENSION(n_turbines) :: omega !turbine rotation rate (rad/s). PKJ: then why do we have rotrate?
+  REAL, DIMENSION(n_turbines) :: omega !turbine rotation rate (rad/s)
 
-  REAL                  :: time_fac ! PKJ: purpose? was used for debugging 
+  REAL                  :: time_fac
   REAL                  :: xtime
   REAL                  :: u_geo
   REAL                  :: v_geo
@@ -307,7 +292,7 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
   REAL                  :: delta
   REAL                  :: sgn
   REAL                  :: dum
-
+  REAL                  :: operate
 ! variables for hub drag
 
   REAL                  :: cdh
@@ -339,7 +324,8 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
 
 ! test
   REAL :: zd, zetazd
-
+! temporary variable from MSG debugging
+REAL :: temp
 !---------------------------------------------------------
 
   CHARACTER(LEN=12), PARAMETER :: FMT1 = "(I5,1F18.12)"
@@ -358,6 +344,8 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
 !
 ! 0. Set turbine parameters (to be assigned via auxiliary input file in future version)
 !____________________________________________________________________________________________________________________________
+
+! PRINT *,'Starting GAD routine'
 
   hoff = 5.0 ! hub offset
   yaw_rate = 2.0 !degrees per second
@@ -385,8 +373,17 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
   DO k = 1,n_timeseries
       dum = dum + v0t(k,1)
   ENDDO
-  
-  IF ( dum .EQ. 0.0 ) THEN
+
+if (dum .LT. 0.0001) then
+   print*,'use dum variable to read files'
+else
+   ! print*,'dum variable is',dum
+endif
+
+! print*,'dum variable is equal to',dum,'after loop'
+! print*,'check if i am reading the turbine files every time',' maybe use x_turbine variable (if equal to zero, then continue)',x_turbine(1)
+ 
+  IF ( x_turbine(1) .EQ. 0.0 ) THEN !MS changed this from dum .EQ. 0.0 
      !RSA for turbine info read from file (adapted from NM code)
      IF (TRIM(windturb_spec) .NE. 'none') THEN
         OPEN(file=TRIM(windturb_spec),unit=19,FORM='FORMATTED',STATUS='OLD',IOSTAT=istat)
@@ -396,6 +393,7 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
            DO WHILE (.true.)
               READ(19,'(A256)',END=30) inline !RSA read file and goto 30 if end of file
               IF ( index(inline,'!') .EQ. 0 ) n = n + 1
+              print*,'file reading',n,'turbines'
            ENDDO
 
 30         CONTINUE !RSA reached end of file
@@ -417,11 +415,12 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
                  y_turbine(i) = lat
                  hub_height(i) = hubheight
                  rotor_diameter(i) = diameter
-                 blade_length(i) = bldlngth !PKJ: This is to take into account only the aerodynamic part
+                 blade_length(i) = bldlngth
                  theta_turbine(i) = thetaturb
                  cutinspd(i) = cutin
                  cutoutspd(i) = cutout
                  i = i + 1 !RSA counting lines
+                ! PRINT *,'Reading file turbines(MSG)',x_turbine(i-1),y_turbine(i-1),'locs',hub_height(i-1),'hub height',rotor_diameter(i-1), 'diameter',blade_length(i-1),'blades',theta_turbine(i-1),'angle',cutinspd(i-1),'cutin',cutoutspd(i-1),'cutout'
               ENDIF
            ENDDO
 
@@ -449,6 +448,9 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
         rotor_diameter(1) = 77.0 
         blade_length(1)   = 38.5*(1.0-0.0444) !PSU1.5 turbine
         theta_turbine(1)  = 180.0
+        cutinspd(1) = 3 !! Added by MSG
+        cutoutspd(1) = 25 !! Added by MSG
+        PRINT *,"Reading file turbines(MSG)",x_turbine(1),y_turbine(1),"locs"
      ENDIF !RSA end read file or not
 
      !RSA convert x_turbine and y_turbine from lat/lon to x/y if need be
@@ -465,7 +467,6 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
         CALL MPI_BCAST(lat1,1,MPI_REAL,master,MPI_COMM_WORLD,ierr)
         CALL MPI_BCAST(lon1,1,MPI_REAL,master,MPI_COMM_WORLD,ierr)
         CALL MPI_BARRIER(MPI_COMM_WORLD,ierr) !RSA not sure if this is needed, or if it should be before or after BCAST
-		!PKJ: Looks like MPI_BARRIER is needed. See https://stackoverflow.com/questions/6653084/implied-synchronization-with-mpi-bcast-for-both-sender-and-receivers
 #endif
 
         !RSA parameters for map_set. This function defines the structure 'proj'
@@ -500,11 +501,14 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
      ENDIF
   ENDIF !RSA end first time GAD is turned on
 
+!print*,'CHECKING THAT VARIABLES ARE NON ZERO EVERY TIME A RESTART FILE INITIATES'
+!print*,x_turbine(:),y_turbine(:),'locs',hub_height(:),'hub height',rotor_diameter(:),'diameter',blade_length(:),'blades',theta_turbine(:),'angle',cutinspd(:),'cutin',cutoutspd(:),'cutout'
+
 !____________________________________________________________________________________________________________________________
 !
 ! 1. Find x, y locations for u, v, and w nodes within the patch
 !____________________________________________________________________________________________________________________________
-
+ ! PRINT*,'Starting part 1'
   i_start = its
   i_end   = MIN(ite,ide-1)
   j_start = jts
@@ -535,7 +539,6 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
   ENDDO
 
   !RSA determine if turbine(n) is on patch
-  !To accelerate MPI
   xmin_tile=u_x(i_start)
   xmax_tile=u_x(i_end+1)
   ymin_tile=v_y(j_start)
@@ -545,10 +548,7 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
 
     !Define if turbine falls within tile neighborhood
     turbine_on_patch(n) = 0
-    
-	! Check if this can be extended
-	!PKJ: make sure body force/ blade force are conserved
-	!PKJ: Check if we need to go beyond 1D
+
     xmin_turb = x_turbine(n) - rotor_diameter(n)
     xmax_turb = x_turbine(n) + rotor_diameter(n)
     ymin_turb = y_turbine(n) - rotor_diameter(n)
@@ -572,8 +572,6 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
     !RSA recall theta_turbine is measured counterclockwise starting at 0 deg. for a
     !west-facing turbine (ie. 90 facing south, 180 facing east, 270 facing
     !north, 360 back to facing west)
-	!PKJ: I think we might consider 2D instead of 1D since flow at 1D may be way too much 
-	!influenced by turbine to be called freestream 
     x_inflow(n) = -rotor_diameter(n)*cos(theta_turbine(n)*pi/180.0) + x_turbine(n)
     y_inflow(n) = -rotor_diameter(n)*sin(theta_turbine(n)*pi/180.0) + y_turbine(n)
 
@@ -586,21 +584,22 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
                  (ymin_tile .GE. y_inflow(n)) )  ) THEN
 
       inflow_on_patch(n) = 1
+ !     print*,'YES, INFLOW LOCATION IS ON PATCH'
     ENDIF
   ENDDO
-
+!PRINT*,'Ending part 1'
 !____________________________________________________________________________________________________________________________
 !
 ! 2. If some part of the turbine is on this patch, compute the height dependent gridpoint position variables
 !____________________________________________________________________________________________________________________________
-! PKJ: Nesting is not done in z-dir, so we need to limit the relevant calculations only in the vicinity of turbines
+!PRINT*,'Starting part 2'
   DO n = 1, n_turbines
 
     IF (turbine_on_patch(n) .EQ. 1) THEN
 
       DO j = j_start-1, j_end+1   
         DO i = i_start-1, i_end+1
-           w_z(i,kts,j)=0.0 ! meter above ground, add hgt to get height ASL
+           w_z(i,kts,j)=0.0
         ENDDO
       ENDDO
   
@@ -688,7 +687,7 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
 
     ENDIF ! turbine neighborhood is on patch
   ENDDO ! n_turbines
-
+!PRINT*,'Ending part 2'
 !____________________________________________________________________________________________________________________________
 !
 ! 3. If inflow location is on patch, calculate the wind speed and direction at that location.
@@ -697,15 +696,14 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
 
 ! shift wind speed for each turbine (column of v0t) back by one unit to make room
 ! for the current v0 value 
+!PRINT*,'Starting part 3'
 
-! wind speed time series
   DO n = 1, n_turbines
     DO k = n_timeseries-1,1,-1
       v0t(k+1,n)=v0t(k,n)
     ENDDO
   ENDDO
-  
-! wind direction time series
+!PRINT*,'Starting part 3.1'
   IF (wp_opt .EQ. 3 ) THEN
     DO n = 1, n_turbines
       DO k = n_timeseries-1,1,-1
@@ -713,11 +711,10 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
       ENDDO
     ENDDO
   ENDIF
-
+!PRINT*,'Starting part 3.2'
   DO n = 1, n_turbines
-
     IF (inflow_on_patch(n) .EQ. 1 ) THEN
-
+ !     PRINT*,'inflow patch for turbine ',n
       theta =  theta_turbine(n)*pi/180.0
 
         !using w locations, will calculate cell-centered values below
@@ -726,33 +723,27 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
 
         !RSA find k index of inflow point by following a grid line
         !Note that w_z is AGL, ie w_z(:,kts,:)=0.0
-		!PKJ: "z_inflow" instead of "inflow_z" would have been better for consistency
         DO k = kts+1, k_end
           inflow_z(k) = w_z(i_inflow,k,j_inflow) - hub_height(n)
         ENDDO
         k_inflow=minloc(abs(inflow_z(kts+1:k_end)),1)+kts
         IF (inflow_z(k_inflow) .GT. 0.0) k_inflow = k_inflow - 1    
 
-		!PKJ: velocity components at cell centers
-		!PKJ: Why is second index a k-index instead of a j-index?
         u_c = 0.5 * ( u(i_inflow,k_inflow,j_inflow) + u(i_inflow+1,k_inflow,j_inflow) )
         v_c = 0.5 * ( v(i_inflow,k_inflow,j_inflow) + v(i_inflow,k_inflow,j_inflow+1) )
         w_c = 0.5 * ( w(i_inflow,k_inflow,j_inflow) + w(i_inflow,k_inflow+1,j_inflow) )
         v0inst = u_c*cos(theta)*cos(tilt) + v_c*sin(theta)*cos(tilt) - w_c*sin(tilt) !Instantaneous velocity component normal to the rotor.
 
-        !PKJ: This convention is not very clear to me. Need to clarify if westerly means west to east along the +x axis
-		!PKJ: Shouldn't it be simply d0inst = (d0inst + 360) % 360 ???
         IF (wp_opt .EQ. 3 ) THEN
           IF ( ( u_c .GE. 0.0 ) .AND. ( v_c .LT. 0.0 ) ) THEN   !Wind direction, independent of the
              d0inst = 360.0 - (atan2(u_c,v_c)*180.0/pi - 90.0)  !rotor angle. 0 and 360 are Westerly. 
           ELSE                                                  !Positive values are counterclockwise
-             d0inst = 90.0 - atan2(u_c,v_c)*180.0/pi            !up to 360. No negative values.!PKJ: This is different from standard met definition
-			 !PKJ: We should probably make all the angles consistent, we may have to change the projection routines
+             d0inst = 90.0 - atan2(u_c,v_c)*180.0/pi            !up to 360. No negative values.
           ENDIF
         ENDIF
 
 #ifdef DM_PARALLEL
-        tag=n !?? !PKJ: Beter to use this to make is turbine specific
+        tag=n
         CALL MPI_SEND(v0inst,1,MPI_REAL,master,tag,            &
                              MPI_COMM_WORLD,ierr )
         IF (wp_opt .EQ. 3 ) THEN
@@ -768,7 +759,7 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
 
     ENDIF ! inflow location on patch
   ENDDO ! n_turbines
-
+!PRINT*,'Starting part 3.3'
 #ifdef DM_PARALLEL
   IF ( mytask .eq. master ) THEN
     DO n=1,n_turbines
@@ -777,7 +768,7 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
                              MPI_COMM_WORLD,MPI_STATUS_IGNORE,ierr )
       v0n(n)=v0inst
     ENDDO
-
+!PRINT*,'Starting part 3.4'
     IF (wp_opt .EQ. 3 ) THEN
       DO n=1,n_turbines
         tag=n
@@ -787,29 +778,26 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
       ENDDO
     ENDIF
   ENDIF
-
   CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
   CALL MPI_BCAST(v0n,n_turbines,MPI_REAL,master,MPI_COMM_WORLD,ierr)
   IF (wp_opt .EQ. 3 ) THEN
     CALL MPI_BCAST(d0n,n_turbines,MPI_REAL,master,MPI_COMM_WORLD,ierr)
   ENDIF
-  ! PKJ we put a barrier here also?
 #endif 
-
 !____________________________________________________________________________________________________________________________
 !
 ! 4. Add current v0 to timeseries in v0t, compute current average, and calculate pitch and rpm
 !____________________________________________________________________________________________________________________________
-
   DO n = 1, n_turbines
   
       turb_power_local(n) = 0.0 !RSA initializing for power calculation
+
+      operate = 0.0
 
       dum = 0.0                         ! Looking for problems...
       DO k = 1,n_timeseries
         dum = dum + v0t(k,n)
       ENDDO
-
       !If this is the first time through the GAD routine,
       !Assign all rows (times) of each column (turbine number) the current v0 and d0
       IF ( dum .eq. 0. ) THEN  
@@ -817,13 +805,12 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
           v0t(k,n) = v0n(n)
           d0t(k,n) = d0n(n)
         ENDDO
+!        print*,'v0t in part 4 for first time running GAD should be equal to v0n for each turbine',v0t(1,n),v0n(n)
       ENDIF 
 
       v0t(1,n)=v0n(n)                  ! Assign the first element the current v0 
       d0t(1,n)=d0n(n)
 
-      !PKJ: is there a standard averaging routine?
-	  !or may be make use of https://gcc.gnu.org/onlinedocs/gfortran/SUM.html
       dum = 0.0                        ! Looking for problems...
       DO k = 1,n_timeseries
          dum = dum + v0t(k,n)
@@ -835,7 +822,8 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
          dum = dum + d0t(k,n)
       ENDDO
       d0t_avg = dum/real(n_timeseries) !Running time-average
-
+      
+      !!!!! Turbine yawing !!!!!!
 
       IF (wp_opt .EQ. 3) THEN
 
@@ -851,7 +839,7 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
           yawing(n) = 0 
         ENDIF
 
-        IF (yawing(n) .EQ. 0 ) THEN ! Not yawing
+        IF (yawing(n) .EQ. 0 ) THEN
 
           delta = theta_turbine(n) - d0t_avg
           IF ( delta .LT. -180.0 ) THEN 
@@ -862,11 +850,11 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
 
           sgn = 1.0
           IF ( delta .LT. 0.0 ) sgn = -1.0
-          yaw_err = sgn*(delta)*(delta)*dt !PKJ: Analogous to squarred error
+          yaw_err = sgn*(delta)*(delta)*dt
           acc_yaw_err(n) = acc_yaw_err(n) + yaw_err
 
         ELSE ! turbine is yawing or ready to start
-
+         ! PRINT *,"Turbine is yawing (MSG), theta turbine is",theta_turbine(n)
          yaw_new = d0t_avg !calculated above
          yaw_inc = yaw_rate*dt
 
@@ -896,19 +884,29 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
 
       ENDIF !wp_opt .EQ. 3
 
+    !!!!! Turbine operation !!!!!!
+ !   print*,'Is the turbine on path?',turbine_on_patch(n),'1-> Yes, 0-> No'
     IF (turbine_on_patch(n) .EQ. 1 ) THEN !only do this if part of the turbine is on the patch
 
       theta =  theta_turbine(n)*pi/180.0
-
+  !    print*,'current wind speed is:',v0t_avg,', cut in speed is:',cutinspd(n),', and cut out speed is:',cutoutspd(n)
       IF ( (v0t_avg .lt. cutinspd(n)) .or. (v0t_avg .gt. cutoutspd(n)) ) GOTO 200 
-
+      operate = 1.0
+      
       !Use time average velocity at hub location for rpm and pitch
+   !   print*,'TURBINE SHOULD BE OPERATING'
       IF (turbine_opt .EQ. 15) THEN
          rpm   = calc_rpm_psu15( v0t_avg )
          pitchdeg = calc_pitch_psu15( v0t_avg )
       ELSEIF (turbine_opt .EQ. 16) THEN
          rpm   = calc_rpm_ge16( v0t_avg )
          pitchdeg = calc_pitch_ge16( v0t_avg )
+      ELSEIF (turbine_opt .EQ. 100) THEN
+         rpm = calc_rpm_dtu10( v0t_avg )
+         pitchdeg = calc_pitch_dtu10( v0t_avg )
+      ELSEIF (turbine_opt .EQ. 50) THEN
+         rpm   = calc_rpm_nrel5( v0t_avg )
+         pitchdeg = calc_pitch_nrel5( v0t_avg )
       ENDIF
    
       omega(n) = 2.0*pi*rpm/60.0
@@ -924,24 +922,22 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
 
       !____________________________________________________________________________________________________________________________
       !
-      ! 5.  Compute distances from computational nodes to rotor plane in order to 
+      ! 5.  Compute distances from computational nodes to rotor place in order to 
       !     ii) Smear forces as a function of distance in the axial direction
       !____________________________________________________________________________________________________________________________
       !
-      ! Compute distances from computational nodes to rotor plane in order to 
+      ! Compute distances from computational nodes to rotor place in order to 
       !  ii) Smear forces as a function of distance in the axial direction
 
       ! dau,dav,daw - Signed distance, in a horizontal plane, from the gridpoint to a line
       !               going through the turbine (nacelle) axis. 
       ! dru,drv,drw - signed distance, in a horizontal plane, from the vertical rotor plane
-
-      !PKJ: How is individual annulus taken into consideration?
       CALL calc_distance( x_turbine(n), y_turbine(n), theta_turbine(n), &
                           its, ite, jts, jte, &
                           i_start, i_end, j_start, j_end,        &
                           u_x, u_y, v_x, v_y, w_x, w_y,          &
                           dau, dav, daw, dru, drv, drw )
-      
+
       DO j = j_start, j_end
         DO k = kts, k_end
           DO i = i_start, i_end
@@ -956,11 +952,10 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
       DO j = j_start, j_end
         DO k = kts, k_end
           DO i = i_start, i_end
-		  !PKJ: Refer to Jeff's email from 10/29/2020
-            ru(i,k,j) = sqrt(dau(i,j)**2+dzu(i,k,j)**2) !PKJ: Distance of grid point form the axis line??
+            ru(i,k,j) = sqrt(dau(i,j)**2+dzu(i,k,j)**2)
             rv(i,k,j) = sqrt(dav(i,j)**2+dzv(i,k,j)**2)
             rw(i,k,j) = sqrt(daw(i,j)**2+dzw(i,k,j)**2)
-            rc(i,k,j) = sqrt(daw(i,j)**2+dzc(i,k,j)**2) !PKJ: why daw?
+            rc(i,k,j) = sqrt(daw(i,j)**2+dzc(i,k,j)**2)
             wp_acc_u(i,k,j) = 0.0
             wp_acc_v(i,k,j) = 0.0
             wp_acc_w(i,k,j) = 0.0
@@ -971,30 +966,24 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
       rotor_radius = 0.5*rotor_diameter(n)
 
       cnst = 1.0/rho !JDM
-!      PKJ: epsilon = sqrt(2.0)*sigma ~ 2.0*sqrt(dx*dy) => sigma = sqrt(2.0*dx*dy)
+
 !      sigma = sqrt(dx*dy)
 !      adenom = sigma*sqrt(2.0*pi)
 !      bdenom  = 2.0*sigma*sigma
-      ! PKJ: Why should the definition of sigma depend on theta? Irrespective of yaw the decay should happen as a function of distance
-	  ! PKJ: 
       sigma   = (abs(dx*cos(theta))+abs(dy*sin(theta))) !NM so normal for rotor plane sqrt(dx*dy)	!!!This is the standard deviation
-      adenom  = sigma*sqrt(2.0*pi)                  ! want integral=1 for Gaussian ;accel will have units of 1/m
+      adenom  = sigma*sqrt(2.0*pi)                  !want integral=1 for Gaussian ;accel will have units of 1/m
       bdenom  = 2.*sigma*sigma                      !!determines spread of gaussian
 
       !NM sigmar normal to rotor plane
       sigmar = abs(dx*cos(theta)*cos(tilt))+abs(dy*sin(theta)*cos(tilt)) !NM
       adenom2 = sigmar*sqrt(2.0*pi) !NM want integral to be 1 for gaussian
       bdenom2 = 2.*sigmar**2 !NM spread of 1-D gaussian 
-	  
-	  ! Why do we consider sigma as well as sigmar? Then, why are we not considering sigmaz?
 
       radmin = rotor_diameter(n)/2.0 - blade_length(n)
-
       !____________________________________________________________________________________________________________________________
       !
       ! 6. Compute local lift and drag accelerations using instantaneous local velocity, and apply to u,v, and w tendencies
       !____________________________________________________________________________________________________________________________
-
       DO j = j_start, j_end
         DO k = kts, k_end
           DO i = i_start, i_end
@@ -1100,12 +1089,20 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
 
              !RSA adding logic to prevent fx from being NaN. See explanation in calc_fnft below.
              if ( v0_u .gt. 0.0 ) then
-                if (turbine_opt .eq. 15) then
+                if (turbine_opt .eq. 15) then 
+     !              print*,'radius',radius,'blade_length',blade_length(n),'rotor_diameter',rotor_diameter(n),'dscale',dscale
                    fnft = calc_fnft_psu15( v0_u, rho, blades, blade_length(n), rotor_diameter(n),   &
-                                              radius, pitchdeg, rpm, dscale, cscale) 
+                                              radius, pitchdeg, rpm, dscale, cscale)
+     !              print*,'done u-component' 
                 elseif (turbine_opt .eq. 16) then
                    fnft = calc_fnft_ge16( v0_u, rho, blades, blade_length(n), rotor_diameter(n),   &
                                               radius, pitchdeg, rpm, dscale, cscale)
+                elseif (turbine_opt .eq. 100) then
+                   fnft = calc_fnft_dtu10( v0_u, rho, blades, blade_length(n),rotor_diameter(n),   &
+                                              radius, pitchdeg, rpm, dscale,cscale)
+                elseif (turbine_opt .eq. 50) then
+                   fnft = calc_fnft_nrel5( v0_u, rho, blades,blade_length(n),rotor_diameter(n),   &
+                                              radius, pitchdeg, rpm,dscale,cscale)
                 endif
 
                 fn = fnft(1)
@@ -1176,11 +1173,19 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
                !RSA adding logic to prevent fy from being NaN. See explanation in calc_fnft below.
                if ( v0_v .gt. 0.0 ) then
                    if (turbine_opt .eq. 15) then
+      !                print*,'radius',radius,'blade_length',blade_length(n),'rotor_diameter',rotor_diameter(n),'dscale',dscale
                       fnft = calc_fnft_psu15( v0_v, rho, blades, blade_length(n), rotor_diameter(n),   &
-                                              radius, pitchdeg, rpm, dscale, cscale)  
+                                              radius, pitchdeg, rpm, dscale, cscale)
+       !               print*,'done v-component'
                    elseif (turbine_opt .eq. 16) then
                       fnft = calc_fnft_ge16( v0_v, rho, blades, blade_length(n), rotor_diameter(n),   &
                                               radius, pitchdeg, rpm, dscale, cscale)  
+                   elseif (turbine_opt .eq. 100) then
+                      fnft = calc_fnft_dtu10( v0_v, rho, blades,blade_length(n), rotor_diameter(n),   &
+                                              radius, pitchdeg, rpm, dscale, cscale)
+                   elseif (turbine_opt .eq. 50) then
+                      fnft = calc_fnft_nrel5( v0_v, rho,blades, blade_length(n), rotor_diameter(n),   &
+                                              radius, pitchdeg, rpm, dscale, cscale)
                    endif
 
                    fn = fnft(1)
@@ -1231,17 +1236,28 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
               !RSA adding logic to prevent fz from being NaN. See explanation in calc_fnft below.
               if ( v0_w .gt. 0.0 ) then
                  if (turbine_opt .eq. 15) then
+        !            print*,'radius',radius,'blade_length',blade_length(n),'rotor_diameter',rotor_diameter(n),'dscale',dscale
                     fnft = calc_fnft_psu15( v0_w, rho, blades, blade_length(n), rotor_diameter(n), &
-                                            radius, pitchdeg, rpm, dscale, cscale ) 
+                                            radius, pitchdeg, rpm, dscale, cscale )
+         !           print*,'done w-component' 
                  elseif (turbine_opt .eq. 16) then 
                     fnft = calc_fnft_ge16( v0_w, rho, blades, blade_length(n), rotor_diameter(n), &
                                             radius, pitchdeg, rpm, dscale, cscale )
-                 endif
+                elseif (turbine_opt .eq. 100) then
+                      fnft = calc_fnft_dtu10( v0_w, rho, blades,blade_length(n), rotor_diameter(n),   &
+                                              radius, pitchdeg, rpm, dscale, cscale)
+                elseif (turbine_opt .eq. 50) then
+                      fnft = calc_fnft_nrel5( v0_w, rho,blades, blade_length(n), rotor_diameter(n),   &
+                                              radius, pitchdeg, rpm, dscale, cscale)
+                endif
 
                  fn = fnft(1)
                  ft = fnft(2) 
 
                  fz = -fn*sin(tilt) - ft*cos(zeta)*cos(tilt)
+                if (isnan(fz)) then
+                        print*,'fz is NaN fn=',fn,'sin(tilt)=',sin(tilt),'ft=',ft,'cos(zeta)=',cos(zeta),'cos(tilt)=',cos(tilt)
+                endif
               else
                  !RSA set fz to 0 for now, but turbine should eventually yaw into place.
                  ! write(*,*) "RSA to prevent NaNs, skipping call to calc_fnft for fz: i,j,k=",i,j,k 
@@ -1250,10 +1266,12 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
 
 !JDM TEST SIGN      fz = -fn*sin(tilt) 
 !JDM TEST SIGN      fz = -ft*cos(zeta)*cos(tilt) 
-
+              temp = rw_tendf(i,k,j)
               rw_tendf(i,k,j) = rw_tendf(i,k,j)  &
                               - mut(i,j)*acc_w*cnst*fz
-
+                if (isnan(rw_tendf(i,k,j))) then
+                        print*,'in phys/module_gen_act_disk mut(i,j)=',mut(i,j),'acc_w=',acc_w,'cnst=',cnst,'fz=',fz,'temp=',temp
+                endif
 !JDM          wp_ts(i,k,j) = -1.0*mut(i,j)*acc_w*cnst*fz
  
 !------ C ---- 
@@ -1290,10 +1308,18 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
              !RSA adding logic to prevent fx from being NaN. See explanation in calc_fnft below.
              if ( v0_c .gt. 0.0 ) then
                 if (turbine_opt .eq. 15) then
+!                   print*,'radius',radius,'blade_length',blade_length(n),'rotor_diameter',rotor_diameter(n),'dscale',dscale
                    fnft = calc_fnft_psu15( v0_c, rho, blades, blade_length(n), rotor_diameter(n),   &
                                               radius, pitchdeg, rpm, dscale, cscale) 
+ !                  print*,'done c-component'
                 elseif (turbine_opt .eq. 16) then
                    fnft = calc_fnft_ge16( v0_c, rho, blades, blade_length(n), rotor_diameter(n),   &
+                                              radius, pitchdeg, rpm, dscale, cscale)
+                elseif (turbine_opt .eq. 100) then
+                      fnft = calc_fnft_dtu10( v0_c, rho, blades,blade_length(n), rotor_diameter(n),   &
+                                              radius, pitchdeg, rpm, dscale, cscale)
+                elseif (turbine_opt .eq. 50) then
+                      fnft = calc_fnft_nrel5( v0_c, rho,blades, blade_length(n), rotor_diameter(n),   &
                                               radius, pitchdeg, rpm, dscale, cscale)
                 endif
 
@@ -1329,13 +1355,21 @@ USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
     ENDIF !turbine_on_patch = 1
 
 200 CONTINUE !time-averaged inflow is < cutin or > cutout speed
+    
+    if (operate .eq. 1.0) then
+ !      print*,'Turbine did start operating'            
+    elseif (operate .eq. 0.0) then
+  !     print*,'Turbine did not start operating'
+    endif
 
   ENDDO  !n loop over all turbines
-
+!print*, 'finishing looping all turbines'
 #ifdef DM_PARALLEL
   !RSA sum turbine power over all procs
+!  print*, 'try setting turb_power to zero (allocate a space for it)'
   CALL MPI_REDUCE(turb_power_local,turb_power,n_turbines,MPI_REAL,MPI_SUM,master,MPI_COMM_WORLD,ierr)
 #endif
+!PRINT *,'GAD FINISHED, MSG MADE IT!!'
 
 END SUBROUTINE gen_act_disk
 
@@ -1397,7 +1431,6 @@ SUBROUTINE calc_distance( x_turb, y_turb, theta_turb,     &
 !                  ||                        p     |
 !__________________||___ surface                            
 
-!PKJ: shouldn't it be dzu instead of dau in the left figure?
 
 !
 ! 1. Obtain coefficients for normal distance, dau, to axial plane, the plane 

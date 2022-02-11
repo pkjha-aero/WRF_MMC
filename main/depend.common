@@ -781,6 +781,21 @@ module_diagnostics_driver.o: \
 		../frame/module_driver_constants.o 	\
 		../share/module_model_constants.o
 
+module_wind_param_driver.o: \
+                ../frame/module_domain.o \
+                ../frame/module_configure.o \
+                ../frame/module_tiles.o \
+                ../frame/module_dm.o \
+                ../frame/module_machine.o \
+                ../frame/module_state_description.o \
+                ../share/module_bc.o \
+                module_gen_act_disk.o
+
+module_gen_act_disk.o: \
+                ../share/module_llxy.o \
+                module_gad_psu15.o \
+                module_gad_ge16.o
+
 module_diag_misc.o: \
 		../frame/module_dm.o
 
