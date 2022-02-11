@@ -33,7 +33,7 @@ state   real     d0t             {ntmetrb} misc     1       -       rh     "d0_t
 # rconfig real     v_geostrophic   namelist,dynamics  max_domains     0.0     -      "v_geostrophic"     ""      "m s-1"
 # rconfig real     z_rough         namelist,dynamics  max_domains     0.0     -      "z_rough"           ""      "m"
 
-rconfig integer  wp_opt          namelist,physics   max_domains     0      rh      "wp_opt"            ""      "" #options for yawing...only takes >= 2.....update later what's for what..probably makes sense to make option 2 as option 0
+rconfig integer  wp_opt          namelist,physics   max_domains     0      rh      "wp_opt"            ""      ""
 rconfig integer  turbine_opt     namelist,physics   1               15     rh      "turbine_opt"       ""      "" #RSA for turbine-specific functions
 rconfig integer  n_turbines      namelist,physics   1               0      rh      "n_turbines"        ""      ""
 rconfig integer  n_timeseries    namelist,physics   1               0      rh      "n_timeseries"      ""      ""

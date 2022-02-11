@@ -7,6 +7,8 @@ USE module_llxy
 !RSA for turbine-specific functions
 USE module_gad_psu15, ONLY: calc_rpm_psu15, calc_pitch_psu15, calc_fnft_psu15
 USE module_gad_ge16, ONLY: calc_rpm_ge16, calc_pitch_ge16, calc_fnft_ge16
+USE module_gad_dtu10, ONLY: calc_rpm_dtu10, calc_pitch_dtu10, calc_fnft_dtu10
+USE module_gad_nrel5, ONLY: calc_rpm_nrel5, calc_pitch_nrel5, calc_fnft_nrel5
 
 #ifdef DM_PARALLEL
   USE MODULE_DM
