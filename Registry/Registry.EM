@@ -3,8 +3,6 @@
 #INCLUDES
 include registry.dimspec
 include registry.em_shared_collection
-include registry.cell_pert
-include registry.windturb
 
 # added to output 5 for ESMF
 state   real   landmask            ij    misc          1     -     i0125rh056d=(interp_fcnm_imask)u=(copy_fcnm)   "LANDMASK"      "LAND MASK (1 FOR LAND, 0 FOR WATER)"  ""

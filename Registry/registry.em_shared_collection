@@ -34,3 +34,4 @@ include registry.scpm_jdm
 include registry.slices
 include registry.column_out
 include registry.tsout
+include registry.windturb

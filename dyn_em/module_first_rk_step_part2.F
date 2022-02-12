@@ -1122,6 +1122,7 @@ BENCH_START(vert_diff_tim)
 BENCH_END(vert_diff_tim)
 
          ENDIF
+        ENDIF
 !
 BENCH_START(hor_diff_tim)
          !$OMP PARALLEL DO   &
