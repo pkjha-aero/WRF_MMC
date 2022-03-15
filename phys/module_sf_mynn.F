@@ -93,13 +93,13 @@ CONTAINS
   SUBROUTINE mynn_sf_init_driver(allowed_to_read,                    &
                                  ims,ime,jms,jme,                    &
                                  its,ite,jts,jte,                    &
-                                 bathymetry_flag, shalwater_rough,   &
+                                 bathymetry_flag, shalwater_z0,   &
                                  shalwater_depth, water_depth,       &
                                  xland,LakeModel,lake_depth,lakemask )
 
     LOGICAL, INTENT(in) :: allowed_to_read
     INTEGER, INTENT(IN)      ::   ims,ime,jms,jme,its,ite,jts,jte
-    INTEGER, INTENT(IN)      ::   shalwater_rough
+    INTEGER, INTENT(IN)      ::   shalwater_z0
     REAL,    INTENT(IN)      ::   shalwater_depth
     INTEGER, INTENT(IN)      ::   bathymetry_flag
     REAL,    DIMENSION( ims:ime, jms:jme ), INTENT(INOUT)    ::  water_depth
@@ -116,10 +116,10 @@ CONTAINS
 
      CALL psi_init
 
-     IF ( shalwater_rough .EQ. 1 ) THEN
+     IF ( shalwater_z0 .EQ. 1 ) THEN
         CALL shalwater_init(ims,ime,jms,jme,            &
                   its,ite,jts,jte,                      &
-                  bathymetry_flag, shalwater_rough,     &
+                  bathymetry_flag, shalwater_z0,     &
                   shalwater_depth, water_depth,         &
                   xland,LakeModel,lake_depth,lakemask   )
      END IF
@@ -141,7 +141,7 @@ CONTAINS
               ims,ime, jms,jme, kms,kme,                    &
               its,ite, jts,jte, kts,kte,                    &
               ustm,ck,cka,cd,cda,isftcflx,iz0tlnd,          &
-              shalwater_rough,shalwater_depth,water_depth   )
+              shalwater_z0,shalwater_depth,water_depth   )
 !-------------------------------------------------------------------
       IMPLICIT NONE
 !-------------------------------------------------------------------
@@ -302,7 +302,7 @@ CONTAINS
 
 !ADDITIONAL OUTPUT
       REAL,     DIMENSION( ims:ime, jms:jme )    ::   wstar,qstar
-      INTEGER,  OPTIONAL,  INTENT(IN )   ::     shalwater_rough  
+      INTEGER,  OPTIONAL,  INTENT(IN )   ::     shalwater_z0  
       REAL,     OPTIONAL,  INTENT(IN )   ::     shalwater_depth
       REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme ), INTENT(IN)  :: water_depth  
 !===================================
@@ -383,7 +383,7 @@ CONTAINS
                 ,isftcflx,iz0tlnd,                                 &
                 USTM(ims,j),CK(ims,j),CKA(ims,j),                  &
                 CD(ims,j),CDA(ims,j),                              &
-                shalwater_rough,water_depth(ims,j)                 &
+                shalwater_z0,water_depth(ims,j)                 &
                                                                    )
 
       ENDDO
@@ -411,7 +411,7 @@ CONTAINS
                      its,ite, jts,jte, kts,kte                     &
                      ,isftcflx, iz0tlnd,                           &
                      ustm,ck,cka,cd,cda,                           &
-                     shalwater_rough,water_depth                   &
+                     shalwater_z0,water_depth                   &
                      )
 
 !-------------------------------------------------------------------
@@ -481,7 +481,7 @@ CONTAINS
 !JOE-additinal output
       REAL,     DIMENSION( ims:ime ) ::                wstar,qstar
 !JOE-end
-      INTEGER,  OPTIONAL,  INTENT(IN )   ::     shalwater_rough  
+      INTEGER,  OPTIONAL,  INTENT(IN )   ::     shalwater_z0  
       REAL, OPTIONAL, DIMENSION( ims:ime ), INTENT(IN)  :: water_depth  
 !----------------------------------------------------------------
 ! LOCAL VARS
@@ -655,7 +655,7 @@ CONTAINS
        !--------------------------------------
        ! CALCULATE z0 (znt)
        !--------------------------------------
-       IF ( shalwater_rough .eq. 1 ) THEN
+       IF ( shalwater_z0 .eq. 1 ) THEN
           ZNT(I) = depth_dependent_z0(water_depth(I),ZNT(I),UST(I))
        ELSE
            IF ( PRESENT(ISFTCFLX) ) THEN
