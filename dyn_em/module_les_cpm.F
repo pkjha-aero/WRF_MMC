@@ -49,7 +49,7 @@
 
 !=======================================================================
  
-    SUBROUTINE calc_cpm_t( cpm_opt, cpm_max_z, cpm_amp, cpm_dt,  &
+    SUBROUTINE calc_cpm_t( cpm_opt, cpm_lim_z, cpm_amp, cpm_dt,  &
                            cpm_nb, cpm_sb, cpm_eb, cpm_wb,       &
                            cpm_ngc_h, cpm_ncells_h,              &
                            cpm_noff_ew_w, cpm_noff_ew_e,         &
@@ -105,7 +105,7 @@
     INTEGER, INTENT( IN    ) :: cpm_nshift_ew, cpm_nshift_ns    ! Number of units to shift perturbations in east-weat and north-south directions
     INTEGER, INTENT( IN    ) :: meso_pblh_opt                   ! whether to use mesoscale PBL height (1) or not (0)
     
-    REAL, INTENT( IN    ) :: cpm_max_z                          ! Max height to apply cpm when meso_pbl_opt=0; lower bound when meso_pbl_opt=1
+    REAL, INTENT( IN    ) :: cpm_lim_z                          ! Max height to apply cpm when meso_pbl_opt=0; lower bound when meso_pbl_opt=1
     REAL, INTENT( IN    ) :: cpm_amp                            ! which perturbation option to use
     REAL, INTENT( IN    ) :: cpm_dt                             ! timescale to apply perturbations (>0). Set =0 for automatic advective timescale method
 
@@ -193,7 +193,7 @@
              
              DO j=j_start, j_end
                 DO i=i_start, i_end
-                   pblh(i,j) = cpm_max_z
+                   pblh(i,j) = cpm_lim_z
                 END DO
              END DO
              
@@ -203,7 +203,7 @@
              
              DO j=j_start, j_end
                 DO i=i_start, i_end
-                   pblh(i,j) = MAX(meso_pblh(i,j),cpm_max_z)
+                   pblh(i,j) = MAX(meso_pblh(i,j),cpm_lim_z)
                 END DO
              END DO
              
@@ -237,13 +237,13 @@
           
 #endif
 
-          IF (meso_pblh_opt .EQ. 0 ) THEN !SET max_pert_z to cpm_max_z in namelist
+          IF (meso_pblh_opt .EQ. 0 ) THEN !SET max_pert_z to cpm_lim_z in namelist
 
                max_pert_z = max_pblh
 
           ELSE                            !Keep the perturbations a little bit below PBLH
 
-               max_pert_z = max_pblh*0.90 
+               max_pert_z = MAX(cpm_lim_z,max_pblh*0.90) 
                
           ENDIF    
 
