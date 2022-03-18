@@ -404,7 +404,7 @@ IF (  config_flags%cpm_opt .GT. 0 ) THEN
             DO ij = 1 , grid%num_tiles
 
                CALL calc_cpm_t ( config_flags%cpm_opt,                       &
-                                 config_flags%cpm_max_z,                     &
+                                 config_flags%cpm_lim_z,                     &
                                  config_flags%cpm_amp,                       &
                                  config_flags%cpm_dt,                        &
                                  config_flags%cpm_nb,                        &

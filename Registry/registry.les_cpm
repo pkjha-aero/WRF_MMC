@@ -6,7 +6,7 @@ state    real     meso_pblh  ij   misc       1       -       rhdf    "meso_pblh"
 
 rconfig	 integer  cpm_opt        namelist,dynamics  max_domains  0    -  "1 to use cell perturbation method; 0 = no perturbations"
 rconfig	 integer  meso_pblh_opt  namelist,dynamics  max_domains  0    -  "1 to calculate and use  mesoscale pblh for perturbation maximum height; 0 uses cpm_maxz"
-rconfig  real     cpm_max_z      namelist,dynamics  max_domains  0.0  -  "Maximum height to apply perturbations if not using meso_pblh_opt"
+rconfig  real     cpm_lim_z      namelist,dynamics  max_domains  0.0  -  "Maximum height to apply perturbations if not using meso_pblh_opt"
 rconfig  real     cpm_amp        namelist,dynamics  max_domains  0.0  -  "Amplitude for cell perturbations if GT 0; otherwise uses default formulations"
 rconfig  real     cpm_dt         namelist,dynamics  max_domains  0.0  -  "Time to refresh perturbations if nonzero; otherwise uses automatic advective timescale"
 rconfig  integer  cpm_nb         namelist,dynamics  max_domains  0    -  "cpm_*b applies perturbations to specified lateral boundary independently."
