@@ -191,7 +191,7 @@ state   real    rv_tend_hdiff   ikj     dyn_em          1               Y       
 state   real    rv_tend_phys    ikj     dyn_em          1               Y               irh "RV_TEND_PHYS"      "total v physics tendency" ""
 state   real    t_tend_adv     ikj     dyn_em          1               -               irh "T_TEND_ADV"       "t-advection tendency" ""
 state    real   bathymetry     ij       dyn_em      1        -     i1  "bathymetry" "Bathymetry and topography" "m"
-state    integer  BATHYMETRY_FLAG   -     misc        1         -     i0        "BATHYMETRY_FLAG"   "Flag for bathymetry in the global attributes for metgrid data"
+state    integer  BATHYMETRY_FLAG   -     misc        1         -     i0rh      "BATHYMETRY_FLAG"   "Flag for bathymetry in the global attributes for metgrid data"
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------
 #                                               
@@ -355,7 +355,7 @@ state    real   ht_coarse       ij     misc        1   -     r                - 
 
 
 # TKE
-state    real   tke            ikj     dyn_em      2         -       r        "tke"          "TURBULENCE KINETIC ENERGY"     "m2 s-2"
+state    real   tke            ikj     dyn_em      2         -       rh        "tke"          "TURBULENCE KINETIC ENERGY"     "m2 s-2"
 i1       real   tke_tend       ikj     dyn_em      1         -      
 
 # variables in 3DTKE scheme (km_opt=5)
@@ -829,12 +829,14 @@ state    real   ts_psfc         ?!       misc      -         -      -        "TS
 state    real   ts_glw          ?!       misc      -         -      -        "TS_GLW"         "Downward long wave flux at surface"
 state    real   ts_gsw          ?!       misc      -         -      -        "TS_GSW"         "Net short wave flux at surface"
 state    real   ts_hfx          ?!       misc      -         -      -        "TS_HFX"         "Upward heat flux at surface"
+state    real   ts_qfx          ?!       misc      -         -      -        "TS_QFX"         "Upward moisture flux at surface"
 state    real   ts_lh           ?!       misc      -         -      -        "TS_LH"          "Upward moisture flux at surface"
 state    real   ts_tsk          ?!       misc      -         -      -        "TS_TSK"         "Skin temperature"
 state    real   ts_tslb         ?!       misc      -         -      -        "TS_TSLB"        "Soil temperature"
 state    real   ts_clw          ?!       misc      -         -      -        "TS_CLW"         "Column integrated cloud water"
 state    real   ts_rainc        ?!       misc      -         -      -        "TS_RAINC"       "Cumulus precip"
 state    real   ts_rainnc       ?!       misc      -         -      -        "TS_RAINNC"      "Grid-scale precip"
+state    real   ts_ust          ?!       misc      -         -      -        "TS_UST"         "U-star"
 
 # Time series of vertical profile of U, V, GHT, THETA, QVAPOR, PRESSURE
 state    real   ts_u_profile   ?!k       misc      -         -      -        "TS_U_PROFILE"   "Wind u-Component, earth relative, vertical profile" "m/s"
@@ -844,6 +846,19 @@ state    real   ts_gph_profile ?!k       misc      -         -      -        "TS
 state    real   ts_th_profile  ?!k       misc      -         -      -        "TS_TH_PROFILE"  "Total potential temperature, vertical profile" "K"
 state    real   ts_qv_profile  ?!k       misc      -         -      -        "TS_QV_PROFILE"  "Water vapor mixing ratio, vertical profile" "kg/kg"
 state    real   ts_p_profile   ?!k       misc      -         -      -        "TS_P_PROFILE"   "Pressure, vertical profile" "Pa"
+state    real   ts_tke_profile ?!k       misc      -         -      -        "TS_TKE_PROFILE" "TKE, vertical profile" "m2 s-2"
+state    real   ts_m11_profile ?!k       misc      -         -      -        "TS_M11_PROFILE" "M11, vertical profile" "m2 s-2"
+state    real   ts_m12_profile ?!k       misc      -         -      -        "TS_M12_PROFILE" "M12, vertical profile" "m2 s-2"
+state    real   ts_m13_profile ?!k       misc      -         -      -        "TS_M13_PROFILE" "M13, vertical profile" "m2 s-2"
+state    real   ts_m22_profile ?!k       misc      -         -      -        "TS_M22_PROFILE" "M22, vertical profile" "m2 s-2"
+state    real   ts_m33_profile ?!k       misc      -         -      -        "TS_M33_PROFILE" "M33, vertical profile" "m2 s-2"
+state    real   ts_m23_profile ?!k       misc      -         -      -        "TS_M23_PROFILE" "M23, vertical profile" "m2 s-2"
+state    real   ts_mh1_profile ?!k       misc      -         -      -        "TS_MH1_PROFILE" "MH1, vertical profile" "K m s-1"
+state    real   ts_mh2_profile ?!k       misc      -         -      -        "TS_MH2_PROFILE" "MH2, vertical profile" "K m s-1"
+state    real   ts_mh3_profile ?!k       misc      -         -      -        "TS_MH3_PROFILE" "MH3, vertical profile" "K m s-1"
+state    real   ts_mq1_profile ?!k       misc      -         -      -        "TS_MQ1_PROFILE" "MQ1, vertical profile" "m s-1"
+state    real   ts_mq2_profile ?!k       misc      -         -      -        "TS_MQ2_PROFILE" "MQ2, vertical profile" "m s-1"
+state    real   ts_mq3_profile ?!k       misc      -         -      -        "TS_MQ3_PROFILE" "MQ3, vertical profile" "m s-1"
 
 
 # urban model variables
@@ -902,7 +917,7 @@ state    real   XLAIDYN          ij     misc        1         -     -         "X
 state    real   SSTSK            ij     misc        1         -     rhd=(interp_mask_field:lu_index,iswater)u=(copy_fcnm)   "SSTSK"              "SKIN SEA SURFACE TEMPERATURE" "K"
 state    real   lake_depth            ij     misc        1    -     i012rd=(interp_mask_water_field:lu_index,islake)   "lake_depth"              "lake depth" "m"
 state    real     water_depth      ij     misc        1       -     i0rhd  "water_depth"  "global water depth" "m"
-rconfig  integer  shalwater_rough         namelist,physics      max_domains   0         rh    "shallow water roughness flag"     ""      ""
+rconfig  integer  shalwater_z0         namelist,physics      max_domains   0         rh    "shallow water roughness flag"     ""      ""
 rconfig  real     shalwater_depth         namelist,physics      1   -1.0       rh    "water depth for shallow water scheme"     ""      ""
 state    real   DTW              ij     misc        1         -     r   "DTW"              "WARM LAYER TEMP DIFF" "C"
 # Ocean surface currents
@@ -2344,7 +2359,8 @@ rconfig   integer   num_moves       namelist,domains    1                0
 rconfig   integer   ts_buf_size     namelist,domains    1                200          -       "ts_buf_size"   "Size of time series buffer"
 rconfig   integer   max_ts_locs     namelist,domains    1                5            -       "max_ts_locs"   "Maximum number of time series locations"
 rconfig   logical   tslist_ij             derived       1              .false. rh  "tslist_ij"    "Use i,j locations in tslist"   ""
-rconfig   logical   tslist_unstagger_winds   namelist,domains    1              .false. rh  "tslist_unstagger_winds"    "interpolate u and v to cell centers"   ""
+rconfig   logical   tslist_unstagger_winds   namelist,domains    1     .false. rh  "tslist_unstagger_winds"    "interpolate u and v to cell centers"   ""
+rconfig   integer   tslist_turbulent_output  namelist,domains    1     0       rh  "tslist_turbulent_output"         "output TKE/flux variables"   ""
 rconfig   integer   vortex_interval  namelist,domains   max_domains      15  -  "" "" "minutes"
 rconfig   integer   max_vortex_speed namelist,domains   max_domains      40  -  "" "" "meters per second"
 rconfig   integer   corral_dist     namelist,domains    max_domains      8
@@ -3256,8 +3272,8 @@ package   icedepth_one   seaice_thickness_opt==1     -             state:icedept
 
 #Time series options for text output
 package   notseries             process_time_series==0                 -             -
-package   tseries               process_time_series==1                 -             state:ts_hour,ts_u,ts_v,ts_q,ts_t,ts_psfc,ts_glw,ts_gsw,ts_hfx,ts_lh,ts_tsk,ts_tslb,ts_clw,ts_rainc,ts_rainnc,ts_u_profile,ts_v_profile,ts_gph_profile,ts_th_profile,ts_p_profile,ts_w_profile
-package   tseries_add_solar     process_time_series==2                 -             state:ts_hour,ts_u,ts_v,ts_q,ts_t,ts_psfc,ts_glw,ts_gsw,ts_hfx,ts_lh,ts_tsk,ts_tslb,ts_clw,ts_rainc,ts_rainnc,ts_u_profile,ts_v_profile,ts_gph_profile,ts_th_profile,ts_cldfrac2d,ts_wvp,ts_lwp,ts_iwp,ts_swp,ts_lwp_tot,ts_iwp_tot,ts_swp_tot,ts_re_qc,ts_re_qi,ts_re_qs,ts_re_qc_tot,ts_re_qi_tot,ts_re_qs_tot,ts_tau_qc,ts_tau_qi,ts_tau_qs,ts_tau_qc_tot,ts_tau_qi_tot,ts_tau_qs_tot,ts_cbaseht,ts_ctopht,ts_cbaseht_tot,ts_ctopht_tot,ts_clrnidx,ts_p_profile,ts_w_profile,ts_swdown,ts_swddni,ts_swddif,ts_swdownc,ts_swddnic,ts_swdown2,ts_swddni2,ts_swddif2,ts_swdownc2,ts_swddnic2
+package   tseries               process_time_series==1                 -             state:ts_hour,ts_u,ts_v,ts_q,ts_t,ts_psfc,ts_glw,ts_gsw,ts_hfx,ts_qfx,ts_lh,ts_tsk,ts_tslb,ts_clw,ts_rainc,ts_rainnc,ts_ust,ts_u_profile,ts_v_profile,ts_gph_profile,ts_th_profile,ts_p_profile,ts_w_profile,ts_tke_profile
+package   tseries_add_solar     process_time_series==2                 -             state:ts_hour,ts_u,ts_v,ts_q,ts_t,ts_psfc,ts_glw,ts_gsw,ts_hfx,ts_qfx,ts_lh,ts_tsk,ts_tslb,ts_clw,ts_rainc,ts_rainnc,ts_ust,ts_u_profile,ts_v_profile,ts_gph_profile,ts_th_profile,ts_cldfrac2d,ts_wvp,ts_lwp,ts_iwp,ts_swp,ts_lwp_tot,ts_iwp_tot,ts_swp_tot,ts_re_qc,ts_re_qi,ts_re_qs,ts_re_qc_tot,ts_re_qi_tot,ts_re_qs_tot,ts_tau_qc,ts_tau_qi,ts_tau_qs,ts_tau_qc_tot,ts_tau_qi_tot,ts_tau_qs_tot,ts_cbaseht,ts_ctopht,ts_cbaseht_tot,ts_ctopht_tot,ts_clrnidx,ts_p_profile,ts_w_profile,ts_swdown,ts_swddni,ts_swddif,ts_swdownc,ts_swddnic,ts_swdown2,ts_swddni2,ts_swddif2,ts_swdownc2,ts_swddnic2
 
 # WRF-HAILCAST
 state    real   HAILCAST_DHAIL1   ij     misc        1         -      r          "HAILCAST_DHAIL1"     "WRF-HAILCAST Hail Diameter, 1st rank order"     "mm"
