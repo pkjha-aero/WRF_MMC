@@ -398,7 +398,7 @@ ENDIF
 IF (  config_flags%cpm_opt .GT. 0 ) THEN   
 
    !JDM   IF (  config_flags%cpm_opt .LE. 6 ) THEN ! Leave hook for other options
-   
+
             !$OMP PARALLEL DO   &
             !$OMP PRIVATE ( ij )
             DO ij = 1 , grid%num_tiles
@@ -434,7 +434,7 @@ IF (  config_flags%cpm_opt .GT. 0 ) THEN
 
             ENDDO
             !$OMP END PARALLEL DO
-
+            
 !JDM   ENDIF
 
 ENDIF

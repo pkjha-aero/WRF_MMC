@@ -428,18 +428,22 @@
                       ENDIF
                       
                       DO i = its, MIN(ite, ide-1)
-                                                  
-                         m = (i-1)/cpm_ngc_h+1
+
+                         IF ( ( i .GT. cpm_noff_ew_w ) .AND. ( i .LT. ide - 1 - cpm_noff_ew_e ) )  THEN 
                          
-                         IF ( m .LE. cpm_ncells_h ) THEN
+                            m = (i-1+cpm_nshift_ew)/cpm_ngc_h+1
                             
-                            DO k = k_slab_start, k_slab_end
-
-                               pert_t(i,k,j) =       (perts_wb(((j-1+cpm_nshift_ns)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag !Output variable only, for debugging.
-
-                               t(i,k,j) = t(i,k,j) + (perts_wb(((j-1+cpm_nshift_ns)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
+                            IF ( m .LE. cpm_ncells_h ) THEN
                                
-                            END DO ! k
+                               DO k = k_slab_start, k_slab_end
+                                  
+                                  pert_t(i,k,j) =       (perts_wb(((j-1+cpm_nshift_ns)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag !Output variable only, for debugging.
+                                  
+                                  t(i,k,j) = t(i,k,j) + (perts_wb(((j-1+cpm_nshift_ns)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
+                                  
+                               END DO ! k
+                               
+                            ENDIF
                             
                          ENDIF
                          
@@ -503,26 +507,32 @@
                          PRINT*,'Error: cpm_nshift_ew is too large or too small in module_les_cpm.F '
                          PRINT*,'range of perturbation cells = 1:',ni
                          PRINT*,'i index value = ',i
-                         PRINT*,'perts_sb index requested = ',(i-1+cpm_nshift_ns)/cpm_ngc_h+1
+                         PRINT*,'perts_sb index requested = ',(i-1+cpm_nshift_ew)/cpm_ngc_h+1
                          PRINT*,'Stopping'
                          STOP
                          
                       ENDIF
                       
                       DO j = jts, MIN(jte, jde-1)
+
+                        IF ( ( j .GT. cpm_noff_ns_s ) .AND. ( j .LT. jde - 1 - cpm_noff_ns_n ) )  THEN 
                          
-                         m = (j-1)/cpm_ngc_h+1
-                         
-                         IF ( m .LE. cpm_ncells_h ) THEN
-                            
-                            DO k = k_slab_start, k_slab_end
+                         m = (j-1+cpm_nshift_ns)/cpm_ngc_h+1
+
+                            IF ( m .LE. cpm_ncells_h ) THEN
+
+                               print*,'i,j,m',i,j,m,(perts_sb(((i-1+cpm_nshift_ew)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
+                               
+                               DO k = k_slab_start, k_slab_end
                                 
-                               pert_t(i,k,j) =       (perts_sb(((i-1+cpm_nshift_ew)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
+                                  pert_t(i,k,j) =       (perts_sb(((i-1+cpm_nshift_ew)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
                                
-                               t(i,k,j) = t(i,k,j) + (perts_sb(((i-1+cpm_nshift_ew)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
+                                  t(i,k,j) = t(i,k,j) + (perts_sb(((i-1+cpm_nshift_ew)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
                                
-                            END DO ! k
+                              END DO ! k
                             
+                            ENDIF
+
                          ENDIF
                          
                       END DO ! i
