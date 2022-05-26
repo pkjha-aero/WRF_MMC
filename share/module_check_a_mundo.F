@@ -681,10 +681,15 @@
             wrf_err_message = '--- ERROR: sf_sfclay_physics must be equal for all domains '
             CALL wrf_message ( wrf_err_message )
             wrf_err_message = '--- Fix sf_sfclay_physics in namelist.input '
+         CALL wrf_debug ( 0, TRIM( wrf_err_message ) )
+         count_fatal_error = count_fatal_error + 1
+         
+         IF ( model_config_rec%spec_ideal(i) .EQ. 1) THEN
+            wrf_err_message = '--- Ignoring error with spec_ideal = 1 (MMC) ' 
+            count_fatal_error = count_fatal_error - 1
             CALL wrf_debug ( 0, TRIM( wrf_err_message ) )
-            wrf_err_message = 'Disabling error for MMC Pert Study JDM '      !JDM-MMC IDEAL PERT TEST 
-            CALL wrf_debug ( 0, TRIM( wrf_err_message ) )                    !JDM-MMC IDEAL PERT TEST 
-!JDM-MMC IDEAL PERT TEST         count_fatal_error = count_fatal_error + 1
+         ENDIF
+            
          END IF
       ENDDO
 

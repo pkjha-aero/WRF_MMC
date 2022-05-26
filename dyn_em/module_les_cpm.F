@@ -520,8 +520,6 @@
                          m = (j-1+cpm_nshift_ns)/cpm_ngc_h+1
 
                             IF ( m .LE. cpm_ncells_h ) THEN
-
-                               print*,'i,j,m',i,j,m,(perts_sb(((i-1+cpm_nshift_ew)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
                                
                                DO k = k_slab_start, k_slab_end
                                 
