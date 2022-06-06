@@ -294,6 +294,14 @@ SUBROUTINE med_before_solve_io ( grid , config_flags )
                                         grid%j_start(ij), grid%j_end(ij),        &
                                         kps    , kpe                     )
 
+                CALL set_physical_bc3d( grid%q_sq_prog_2 , 'p', config_flags,  &
+                                        ids, ide, jds, jde, kds, kde,            &
+                                        ims, ime, jms, jme, kms, kme,            &
+                                        ips, ipe, jps, jpe, kps, kpe,            &
+                                        grid%i_start(ij), grid%i_end(ij),        &
+                                        grid%j_start(ij), grid%j_end(ij),        &
+                                        kps    , kpe                     )
+
              ENDDO
           ENDIF
        ELSE

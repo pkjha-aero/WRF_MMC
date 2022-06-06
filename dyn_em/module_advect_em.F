@@ -3034,6 +3034,7 @@ SUBROUTINE advect_scalar   ( field, field_old, tendency,    &
                              msftx, msfty,                  &
                              fzm, fzp,                      &
                              rdx, rdy, rdzw,                &
+                             doing_q_sq,                    &
                              ids, ide, jds, jde, kds, kde,  &
                              ims, ime, jms, jme, kms, kme,  &
                              its, ite, jts, jte, kts, kte  )
@@ -3043,6 +3044,9 @@ SUBROUTINE advect_scalar   ( field, field_old, tendency,    &
    ! Input data
    
    TYPE(grid_config_rec_type), INTENT(IN   ) :: config_flags
+
+   LOGICAL ,                   INTENT(IN   ) :: doing_q_sq  ! prognostic q_sq
+                                                            ! flag for pbl3d
 
    INTEGER ,                 INTENT(IN   ) :: ids, ide, jds, jde, kds, kde, &
                                               ims, ime, jms, jme, kms, kme, &
@@ -3127,8 +3131,13 @@ SUBROUTINE advect_scalar   ( field, field_old, tendency,    &
 ! set order for the advection schemes
 
   ktf=MIN(kte,kde-1)
-  horz_order = config_flags%h_sca_adv_order
-  vert_order = config_flags%v_sca_adv_order
+  IF (doing_q_sq) THEN
+    horz_order = config_flags%h_pbl3d_adv_order
+    vert_order = config_flags%v_pbl3d_adv_order
+  ELSE
+    horz_order = config_flags%h_sca_adv_order
+    vert_order = config_flags%v_sca_adv_order
+  END IF
 
 !  begin with horizontal flux divergence
 !  here is the choice of flux operators

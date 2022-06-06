@@ -21,6 +21,11 @@ module_advect_em.o: ../share/module_bc.o \
 		../share/module_model_constants.o \
 		../frame/module_wrf_error.o
 
+module_pbl3d.o: module_pbl3d_my.o \
+                ../share/module_model_constants.o
+
+module_pbl3d_my.o: ../share/module_model_constants.o
+
 module_bc_em.o: ../share/module_bc.o \
 		../share/module_model_constants.o \
 		../frame/module_configure.o \

@@ -18,6 +18,7 @@ CONTAINS
                              , rw_tendf, t_tendf                &
                              , ph_tendf, mu_tendf               &
                              , tke_tend                         &
+                             , q_sq_prog_tend                   &
                              , adapt_step_flag , curr_secs      &
                              , psim , psih , gz1oz0 , chklowq   &
                              , cu_act_flag , hol , th_phy       &
@@ -112,6 +113,7 @@ CONTAINS
     REAL    ,DIMENSION(ims:ime,kms:kme,jms:jme), INTENT(INOUT) :: ph_tendf
     REAL    ,DIMENSION(ims:ime,kms:kme,jms:jme), INTENT(INOUT) :: t_tendf
     REAL    ,DIMENSION(ims:ime,kms:kme,jms:jme), INTENT(INOUT) :: tke_tend
+    REAL    ,DIMENSION(ims:ime,kms:kme,jms:jme), INTENT(INOUT) :: q_sq_prog_tend
 
     REAL    ,DIMENSION(ims:ime,jms:jme), INTENT(INOUT) :: mu_tendf
 
@@ -177,6 +179,7 @@ BENCH_START(init_zero_tend_tim)
          CALL wrf_debug ( 200 , ' call init_zero_tendency' )
          CALL init_zero_tendency ( ru_tendf, rv_tendf, rw_tendf,     &
                                    ph_tendf, t_tendf, tke_tend,      &
+                                   q_sq_prog_tend,                   &
                                    mu_tendf,                         &
                                    moist_tend,chem_tend,scalar_tend, &
                                    tracer_tend,num_tracer,           &
