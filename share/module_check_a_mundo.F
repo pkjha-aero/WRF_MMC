@@ -683,6 +683,13 @@
             wrf_err_message = '--- Fix sf_sfclay_physics in namelist.input '
          CALL wrf_debug ( 0, TRIM( wrf_err_message ) )
          count_fatal_error = count_fatal_error + 1
+         
+         IF ( model_config_rec%spec_ideal(i) .EQ. 1) THEN
+            wrf_err_message = '--- Ignoring error with spec_ideal = 1 (MMC) ' 
+            count_fatal_error = count_fatal_error - 1
+            CALL wrf_debug ( 0, TRIM( wrf_err_message ) )
+         ENDIF
+            
          END IF
       ENDDO
 

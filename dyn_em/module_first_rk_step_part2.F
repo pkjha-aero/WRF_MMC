@@ -376,7 +376,7 @@ BENCH_END(comp_diff_metrics_tim)
 !JDM Perturbations
 
 
-IF ( ( config_flags%meso_pblh_opt .EQ. 1 ) .AND. ( config_flags%km_opt .EQ. 4 ) ) THEN   
+IF ( ( config_flags%cpm_meso_pblh .EQ. 1 ) .AND. ( config_flags%km_opt .EQ. 4 ) ) THEN   
 
          !$OMP PARALLEL DO   &
          !$OMP PRIVATE ( ij )
@@ -399,7 +399,7 @@ ENDIF
 IF (  config_flags%cpm_opt .GT. 0 ) THEN   
 
    !JDM   IF (  config_flags%cpm_opt .LE. 6 ) THEN ! Leave hook for other options
-   
+
             !$OMP PARALLEL DO   &
             !$OMP PRIVATE ( ij )
             DO ij = 1 , grid%num_tiles
@@ -407,7 +407,10 @@ IF (  config_flags%cpm_opt .GT. 0 ) THEN
                CALL calc_cpm_t ( config_flags%cpm_opt,                       &
                                  config_flags%cpm_lim_z,                     &
                                  config_flags%cpm_amp,                       &
+                                 config_flags%cpm_pec,                       &
+                                 config_flags%cpm_rim,                       &
                                  config_flags%cpm_dt,                        &
+                                 config_flags%cpm_lambda,                    &
                                  config_flags%cpm_nb,                        &
                                  config_flags%cpm_sb,                        & 
                                  config_flags%cpm_eb,                        &
@@ -418,14 +421,14 @@ IF (  config_flags%cpm_opt .GT. 0 ) THEN
                                  config_flags%cpm_noff_ew_e,                 &
                                  config_flags%cpm_noff_ns_s,                 &
                                  config_flags%cpm_noff_ns_n,                 &
-                                 config_flags%cpm_nshift_ew,                 &
-                                 config_flags%cpm_nshift_ns,                 &
                                  config_flags%cpm_ngc_v,                     &
                                  config_flags%cpm_noff_v,                    &
                                  grid%prttms, grid%prtdt,                    &
                                  grid%prtseed, grid%pert_t,                  &  
-                                 config_flags%meso_pblh_opt, grid%meso_pblh, & 
-                                 grid%t_2, grid%u_2, grid%v_2, grid%rdz,     &
+                                 config_flags%cpm_meso_pblh, grid%meso_pblh, &
+                                 config_flags%cpm_pblh_check,                &
+                                 grid%t_2, grid%u_2, grid%v_2, grid%w_2,     &
+                                 grid%rdz, grid%rdzw,                        &
                                  grid%dx, grid%dt,                           & 
                                  ids, ide, jds, jde, kds, kde,               &
                                  ims, ime, jms, jme, kms, kme,               &
@@ -435,7 +438,7 @@ IF (  config_flags%cpm_opt .GT. 0 ) THEN
 
             ENDDO
             !$OMP END PARALLEL DO
-
+            
 !JDM   ENDIF
 
 ENDIF

@@ -49,16 +49,17 @@
 
 !=======================================================================
  
-    SUBROUTINE calc_cpm_t( cpm_opt, cpm_lim_z, cpm_amp, cpm_dt,  &
+    SUBROUTINE calc_cpm_t( cpm_opt, cpm_lim_z, cpm_amp,          &
+                           cpm_pec, cpm_rim, cpm_dt, cpm_lambda, &
                            cpm_nb, cpm_sb, cpm_eb, cpm_wb,       &
                            cpm_ngc_h, cpm_ncells_h,              &
                            cpm_noff_ew_w, cpm_noff_ew_e,         &
                            cpm_noff_ns_s, cpm_noff_ns_n,         &
-                           cpm_nshift_ew, cpm_nshift_ns,         &
                            cpm_ngc_v, cpm_noff_v,                &
                            prttms, prtdt, prtseed, pert_t,       &
-                           meso_pblh_opt, meso_pblh,             &
-                           t, u, v, rdz,                         &
+                           cpm_meso_pblh, meso_pblh,             &
+                           cpm_pblh_check,                       &
+                           t, u, v, w, rdz, rdzw,                &
                            dx, dt,                               &
                            ids, ide, jds, jde, kds, kde,         &
                            ims, ime, jms, jme, kms, kme,         &
@@ -84,11 +85,13 @@
        ims, ime, jms, jme, kms, kme,  &
        its, ite, jts, jte, kts, kte
 
-    REAL, DIMENSION( ims:ime, kms:kme, jms:jme ), INTENT( INOUT ) :: t         ! potential temperature                 [k]
-    REAL, DIMENSION( ims:ime, kms:kme, jms:jme ), INTENT( INOUT ) :: pert_t    ! potential temperature perturbation    [k]
+    REAL, DIMENSION( ims:ime, kms:kme, jms:jme ), INTENT( INOUT ) :: t         ! potential temperature                 [K]
+    REAL, DIMENSION( ims:ime, kms:kme, jms:jme ), INTENT( INOUT ) :: pert_t    ! potential temperature perturbation    [K]
     REAL, DIMENSION( ims:ime, kms:kme, jms:jme ), INTENT( IN    ) :: u         ! zonal wind component                  [m/s]
     REAL, DIMENSION( ims:ime, kms:kme, jms:jme ), INTENT( IN    ) :: v         ! meridional wind component             [m/s]
-    REAL, DIMENSION( ims:ime, kms:kme, jms:jme ), INTENT( IN    ) :: rdz       ! inverse vertical grid spacing         [1/m]
+    REAL, DIMENSION( ims:ime, kms:kme, jms:jme ), INTENT( IN    ) :: w         ! vertical wind component               [m/s]
+    REAL, DIMENSION( ims:ime, kms:kme, jms:jme ), INTENT( IN    ) :: rdz       ! inverse vertical grid spacing @ u,v,t [1/m]
+    REAL, DIMENSION( ims:ime, kms:kme, jms:jme ), INTENT( IN    ) :: rdzw      ! inverse vertical grid spacing @ w     [1/m]
     REAL, DIMENSION( ims:ime, jms:jme ),          INTENT( IN    ) :: meso_pblh ! PBL height from messoscale PBL scheme [m]
     REAL, DIMENSION( kms:kme ),                   INTENT( INOUT ) :: prttms    ! time since last perturbation refresh  [s]
     REAL, DIMENSION( kms:kme ),                   INTENT( INOUT ) :: prtdt     ! time scale to refresh perturbations   [s]
@@ -102,13 +105,14 @@
     INTEGER, INTENT( IN    ) :: cpm_noff_ew_w, cpm_noff_ew_e    ! Number of grid cells from east-west boundaries to start (w) and end (e) perturbations
     INTEGER, INTENT( IN    ) :: cpm_noff_ns_s, cpm_noff_ns_n    ! Number of grid cells from north-south boundaries to start (s) and end (n) perturbations
     INTEGER, INTENT( IN    ) :: cpm_noff_v                      ! Number of grid cells from bottom boundary to start perturbations
-    INTEGER, INTENT( IN    ) :: cpm_nshift_ew, cpm_nshift_ns    ! Number of units to shift perturbations in east-weat and north-south directions
-    INTEGER, INTENT( IN    ) :: meso_pblh_opt                   ! whether to use mesoscale PBL height (1) or not (0)
-    
-    REAL, INTENT( IN    ) :: cpm_lim_z                          ! Max height to apply cpm when meso_pbl_opt=0; lower bound when meso_pbl_opt=1
+    INTEGER, INTENT( IN    ) :: cpm_meso_pblh                   ! whether to use mesoscale PBL height (1) or not (0)
+    REAL, INTENT( IN    ) :: cpm_pblh_check                     ! Timescale to check if mesoscale pblh has changed
+    REAL, INTENT( IN    ) :: cpm_lim_z                          ! Max height to apply cpm when cpm_meso_pblh=0; lower bound when cpm_meso_pblh=1
     REAL, INTENT( IN    ) :: cpm_amp                            ! which perturbation option to use
-    REAL, INTENT( IN    ) :: cpm_dt                             ! timescale to apply perturbations (>0). Set =0 for automatic advective timescale method
-
+    REAL, INTENT( IN    ) :: cpm_pec                            ! Perturbation Eckert number for neutral conditions
+    REAL, INTENT( IN    ) :: cpm_rim                            ! Modified Richardson number for stable conditions
+    REAL, INTENT( IN    ) :: cpm_dt                             ! Time in s to reapply perturbations at all heights. 0.0 for height-dependent advective time
+    REAL, INTENT( IN    ) :: cpm_lambda                         ! Ratio of perturbation refresh time to advective time, to reapply perturbations
     REAL,INTENT( IN    ) :: dt                                  ! model time step
     REAL,INTENT( IN    ) :: dx                                  ! horizontal grid spacing
 
@@ -136,13 +140,10 @@
     REAL    :: num_pts_in_sum                                   ! Variables for computing averages
     REAL    :: tpertmag                                         ! Magnitude of thermal perturbation
     REAL    :: dz                                               ! Depth
-    REAL    :: ek_opt = 0.20                                    ! optimal value of the perturbation Ekman #
     REAL    :: pio2 = piconst/2.0  
     REAL    :: pio4 = piconst/4.0        
     REAL    :: max_pblh, max_pert_z 
     REAL    :: min_slab_z
-    REAL    :: lambda
-    REAL    :: pblh_check_time
     REAL    :: counter
     
     INTEGER, dimension( : ), allocatable :: seed                                       ! random number seed
@@ -165,10 +166,6 @@
     n_slabs_k = kde/cpm_ngc_v
     
     ! LOOP OVER ALL VERTICAL PERTURBATION SLABS TO SEE IF IT IS TIME TO START OR REFRESH
-
-    lambda = 0.875 ! factor to reduce advective refresh time slghtly to account for relaxation at lateral edges (21/24) 
-
-    pblh_check_time = 300.0      ! Check every 5 mins to see if PBLH has changed
     
     DO slab_k = 1, n_slabs_k     ! Outer k-loop over number of vertical perturbation slabs
        
@@ -178,7 +175,7 @@
           
           prttms(slab_k) = dt
 
-          prtdt(slab_k) = pblh_check_time !CHECK IF PBLH HAS CHANGED
+          prtdt(slab_k) = cpm_pblh_check !CHECK IF PBLH HAS CHANGED
           
           print*,'Computing new perturbations, slab_k = ',slab_k
           
@@ -189,7 +186,7 @@
           j_start = jts
           j_end   = MIN(jte,jde)
           
-          IF (meso_pblh_opt .EQ. 0 ) THEN !SET PBLH TO A DESIRED VALUE
+          IF (cpm_meso_pblh .EQ. 0 ) THEN !SET PBLH TO A DESIRED VALUE
              
              DO j=j_start, j_end
                 DO i=i_start, i_end
@@ -199,7 +196,7 @@
              
           ENDIF
           
-          IF (meso_pblh_opt .EQ. 1 ) THEN !SET PBLH TO A DESIRED VALUE
+          IF (cpm_meso_pblh .EQ. 1 ) THEN !SET PBLH TO A DESIRED VALUE
              
              DO j=j_start, j_end
                 DO i=i_start, i_end
@@ -237,7 +234,7 @@
           
 #endif
 
-          IF (meso_pblh_opt .EQ. 0 ) THEN !SET max_pert_z to cpm_lim_z in namelist
+          IF (cpm_meso_pblh .EQ. 0 ) THEN !SET max_pert_z to cpm_lim_z in namelist
 
                max_pert_z = max_pblh
 
@@ -335,7 +332,7 @@
 
              IF (cpm_amp .EQ. 0.0) THEN
                 
-                tpertmag = (wsgeolbavg*wsgeolbavg)/(ek_opt*cp)
+                tpertmag = (wsgeolbavg*wsgeolbavg)/(cpm_pec*cp)
 
              ELSE
 
@@ -345,7 +342,7 @@
 
              IF (cpm_dt .EQ. 0.0 ) THEN
              
-                prtdt(slab_k) = (lambda/cos(anglelbavg))*cpm_ngc_h*cpm_ncells_h*dx/wsslablbavg
+                prtdt(slab_k) = (cpm_lambda/cos(anglelbavg))*cpm_ngc_h*cpm_ncells_h*dx/wsslablbavg
 
              ELSE
                  
@@ -355,8 +352,8 @@
               
              ! CALCULATE (NEW) PERTURBATIONS ===============================================================================
              
-             ni = (ide-1+abs(cpm_nshift_ew))/cpm_ngc_h + 1 
-             nj = (jde-1+abs(cpm_nshift_ns))/cpm_ngc_h + 1
+             ni = (ide-1)/cpm_ngc_h + 1 
+             nj = (jde-1)/cpm_ngc_h + 1
              
              ! Allocate perturbation cell array for each lateral boundary 
              
@@ -415,31 +412,24 @@
                 IF (its .LE. ids + cpm_ngc_h*cpm_ncells_h) THEN 
 
                    DO j = MAX(jts,jds + cpm_noff_ns_s), MIN(jte,jde - 1 - cpm_noff_ns_n)
-
-                      IF ( ( (j-1+cpm_nshift_ns)/cpm_ngc_h+1 .GT. nj )  .OR. ( (j-1+cpm_nshift_ns)/cpm_ngc_h+1 .LT. 1 ) ) THEN
-                         
-                         PRINT*,'Error: cpm_nshift_ns is too large or too small in module_les_cpm.F '
-                         PRINT*,'range of perturbation cells = 1:',nj
-                         PRINT*,'j index value = ',j
-                         PRINT*,'perts_wbindex requested = ',(j-1+cpm_nshift_ns)/cpm_ngc_h+1
-                         PRINT*,'Stopping'
-                         STOP
-                         
-                      ENDIF
-                      
+                     
                       DO i = its, MIN(ite, ide-1)
-                                                  
-                         m = (i-1)/cpm_ngc_h+1
+
+                         IF ( ( i .GT. cpm_noff_ew_w ) .AND. ( i .LT. ide - 1 - cpm_noff_ew_e ) )  THEN 
                          
-                         IF ( m .LE. cpm_ncells_h ) THEN
+                            m = (i-1)/cpm_ngc_h+1
                             
-                            DO k = k_slab_start, k_slab_end
-
-                               pert_t(i,k,j) =       (perts_wb(((j-1+cpm_nshift_ns)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag !Output variable only, for debugging.
-
-                               t(i,k,j) = t(i,k,j) + (perts_wb(((j-1+cpm_nshift_ns)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
+                            IF ( m .LE. cpm_ncells_h ) THEN
                                
-                            END DO ! k
+                               DO k = k_slab_start, k_slab_end
+                                  
+                                  pert_t(i,k,j) =       (perts_wb(((j-1)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag !Output variable only, for debugging.
+                                  
+                                  t(i,k,j) = t(i,k,j) + (perts_wb(((j-1)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
+                                  
+                               END DO ! k
+                               
+                            ENDIF
                             
                          ENDIF
                          
@@ -457,16 +447,6 @@
 
                    DO j = MAX(jts,jds + cpm_noff_ns_s), MIN(jte,jde - 1 - cpm_noff_ns_n)
 
-                      IF ( ( (j-1+cpm_nshift_ns)/cpm_ngc_h+1 .GT. nj )  .OR. ( (j-1+cpm_nshift_ns)/cpm_ngc_h+1 .LT. 1 ) ) THEN
-                         
-                         PRINT*,'Error: cpm_nshift_ns is too large or too small in module_les_cpm.F '
-                         PRINT*,'range of perturbation cells = 1:',nj
-                         PRINT*,'j index value = ',j
-                         PRINT*,'perts_eb index requested = ',(j-1+cpm_nshift_ns)/cpm_ngc_h+1
-                         PRINT*,'Stopping'
-                         STOP
-                         
-                      ENDIF
                       
                       DO i = MIN(ite, ide-1), its, -1
                          
@@ -476,9 +456,9 @@
                             
                             DO k = k_slab_start, k_slab_end
                                
-                               pert_t(i,k,j) =       (perts_eb(((j-1+cpm_nshift_ns)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
+                               pert_t(i,k,j) =       (perts_eb(((j-1)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
                                
-                               t(i,k,j) = t(i,k,j) + (perts_eb(((j-1+cpm_nshift_ns)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
+                               t(i,k,j) = t(i,k,j) + (perts_eb(((j-1)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
                                
                             END DO ! k
                             
@@ -498,31 +478,25 @@
 
                    DO i = MAX(its,ids + cpm_noff_ew_w), MIN(ite,ide - 1 - cpm_noff_ew_e)
 
-                      IF ( ( (i-1+cpm_nshift_ew)/cpm_ngc_h+1 .GT. ni )  .OR. ( (i-1+cpm_nshift_ew)/cpm_ngc_h+1 .LT. 1 ) ) THEN
-                         
-                         PRINT*,'Error: cpm_nshift_ew is too large or too small in module_les_cpm.F '
-                         PRINT*,'range of perturbation cells = 1:',ni
-                         PRINT*,'i index value = ',i
-                         PRINT*,'perts_sb index requested = ',(i-1+cpm_nshift_ns)/cpm_ngc_h+1
-                         PRINT*,'Stopping'
-                         STOP
-                         
-                      ENDIF
                       
                       DO j = jts, MIN(jte, jde-1)
+
+                        IF ( ( j .GT. cpm_noff_ns_s ) .AND. ( j .LT. jde - 1 - cpm_noff_ns_n ) )  THEN 
                          
                          m = (j-1)/cpm_ngc_h+1
-                         
-                         IF ( m .LE. cpm_ncells_h ) THEN
-                            
-                            DO k = k_slab_start, k_slab_end
+
+                            IF ( m .LE. cpm_ncells_h ) THEN
+                               
+                               DO k = k_slab_start, k_slab_end
                                 
-                               pert_t(i,k,j) =       (perts_sb(((i-1+cpm_nshift_ew)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
+                                  pert_t(i,k,j) =       (perts_sb(((i-1)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
                                
-                               t(i,k,j) = t(i,k,j) + (perts_sb(((i-1+cpm_nshift_ew)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
+                                  t(i,k,j) = t(i,k,j) + (perts_sb(((i-1)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
                                
-                            END DO ! k
+                              END DO ! k
                             
+                            ENDIF
+
                          ENDIF
                          
                       END DO ! i
@@ -538,17 +512,6 @@
                 IF (jte .GE. jde - 1 - cpm_ngc_h*cpm_ncells_h) THEN 
 
                    DO i = MAX(its,ids + cpm_noff_ew_w), MIN(ite,ide - 1 - cpm_noff_ew_e)
-
-                      IF ( ( (i-1+cpm_nshift_ew)/cpm_ngc_h+1 .GT. ni )  .OR. ( (i-1+cpm_nshift_ew)/cpm_ngc_h+1 .LT. 1 ) ) THEN
-                         
-                         PRINT*,'Error: cpm_nshift_ew is too large or too small in module_les_cpm.F '
-                         PRINT*,'range of perturbation cells = 1:',ni
-                         PRINT*,'i index value = ',i
-                         PRINT*,'perts_nb index requested = ',(i-1+cpm_nshift_ns)/cpm_ngc_h+1
-                         PRINT*,'Stopping'
-                         STOP
-                         
-                      ENDIF
                       
                       DO j = MIN(jte, jde-1),jts,-1
                          
@@ -558,9 +521,9 @@
                             
                             DO k = k_slab_start, k_slab_end
 
-                               pert_t(i,k,j) =       (perts_nb(((i-1+cpm_nshift_ew)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
+                               pert_t(i,k,j) =       (perts_nb(((i-1)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
                                
-                               t(i,k,j) = t(i,k,j) + (perts_nb(((i-1+cpm_nshift_ew)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
+                               t(i,k,j) = t(i,k,j) + (perts_nb(((i-1)/cpm_ngc_h+1),m)-0.5)*2.0*tpertmag
                                
                             END DO ! k
                             
