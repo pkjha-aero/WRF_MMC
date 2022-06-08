@@ -285,7 +285,7 @@ SUBROUTINE calc_ts_locations( grid )
 
                ts_profile_filename = grid%ts_filename(k)
 
-               ! PSH
+               
                IF ( grid%tslist_turbulent_output == 0 ) THEN
                   ! No turbulent tower data
                   n_ts_files = SIZE(ts_file_endings) - 13
@@ -487,7 +487,6 @@ SUBROUTINE calc_ts( grid )
             grid%ts_u_profile(n,i,k)   = earth_u_profile(k)
             grid%ts_v_profile(n,i,k)   = earth_v_profile(k)
 
-            !PSH
             IF (config_flags%tslist_unstagger_winds) THEN
                 grid%ts_w_profile(n,i,k)   = (grid%w_2(ix,k,iy)+grid%w_2(ix,k+1,iy))/2.0 ! w on half levels
                 grid%ts_gph_profile(n,i,k) = ((grid%phb(ix,k,iy)+grid%ph_2(ix,k,iy))/9.81 + &
@@ -806,7 +805,7 @@ SUBROUTINE write_ts( grid )
 
    IF ( grid%tslist_turbulent_output == 2 ) THEN
        IF ( (grid%km_opt /= 1) .AND. (grid%km_opt /= 4) ) THEN
-           ! - - - - - - SGS LES - - - - - PSH
+           ! - - - - - - SGS LES - - - - - 
            DO k=1,grid%max_ts_level
            ts_buf(:,:) = grid%ts_m11_profile(:,:,k)
            CALL wrf_dm_min_reals(ts_buf(:,:),grid%ts_m11_profile(:,:,k),grid%ts_buf_size*grid%max_ts_locs)

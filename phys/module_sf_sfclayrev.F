@@ -16,7 +16,7 @@ CONTAINS
                      ZNT,UST,PBLH,MAVAIL,ZOL,MOL,REGIME,PSIM,PSIH, &
                      FM,FH,                                        &
                      XLAND,HFX,QFX,LH,TSK,FLHC,FLQC,QGH,QSFC,RMOL, &
-                     U10,V10,U4,V4,TH2,T2,Q2,                      & ! PSH
+                     U10,V10,U4,V4,TH2,T2,Q2,                      &
                      GZ1OZ0,WSPD,BR,ISFFLX,DX,                     &
                      SVP1,SVP2,SVP3,SVPT0,EP1,EP2,                 &
                      KARMAN,EOMEG,STBOLT,                          &
@@ -144,8 +144,8 @@ CONTAINS
       REAL,     DIMENSION( ims:ime, jms:jme )                    , &
                 INTENT(OUT  )               ::                U10, &
                                                               V10, &
-                                                               U4, & ! PSH
-                                                               V4, & ! PSH
+                                                               U4, & 
+                                                               V4, & 
                                                               TH2, &
                                                                T2, &
                                                                Q2, &
@@ -236,7 +236,7 @@ CONTAINS
                 MOL(ims,j),REGIME(ims,j),PSIM(ims,j),PSIH(ims,j),  &
                 FM(ims,j),FH(ims,j),                               &
                 XLAND(ims,j),HFX(ims,j),QFX(ims,j),TSK(ims,j),     &
-                U10(ims,j),V10(ims,j),U4(ims,j),V4(ims,j),         & ! PSH
+                U10(ims,j),V10(ims,j),U4(ims,j),V4(ims,j),         & 
                 TH2(ims,j),T2(ims,j),                              &
                 Q2(ims,j),FLHC(ims,j),FLQC(ims,j),QGH(ims,j),      &
                 QSFC(ims,j),LH(ims,j),                             &
@@ -263,7 +263,7 @@ CONTAINS
                      CP,G,ROVCP,R,XLV,PSFCPA,CHS,CHS2,CQS2,CPM,PBLH,RMOL, &
                      ZNT,UST,MAVAIL,ZOL,MOL,REGIME,PSIM,PSIH,FM,FH,&
                      XLAND,HFX,QFX,TSK,                            &
-                     U10,V10,U4,V4,TH2,T2,Q2,FLHC,FLQC,QGH,        & ! PSH
+                     U10,V10,U4,V4,TH2,T2,Q2,FLHC,FLQC,QGH,        & 
                      QSFC,LH,GZ1OZ0,WSPD,BR,ISFFLX,DX,             &
                      SVP1,SVP2,SVP3,SVPT0,EP1,EP2,                 &
                      KARMAN,EOMEG,STBOLT,                          &
@@ -328,7 +328,7 @@ CONTAINS
                                                               QGH
 
       REAL,     DIMENSION( ims:ime )                             , &
-                INTENT(OUT)     ::                  U10,V10,U4,V4, & ! PSH
+                INTENT(OUT)     ::                  U10,V10,U4,V4, & 
                                                 TH2,T2,Q2,QSFC,LH
 
       REAL,     INTENT(IN   )               ::   CP,G,ROVCP,R,XLV,DX
@@ -361,8 +361,8 @@ CONTAINS
                                                            THX,QX, &
                                                             PSIH2, &
                                                             PSIM2, &
-                                                            PSIH4, & ! PSH
-                                                            PSIM4, & ! PSH
+                                                            PSIH4, & 
+                                                            PSIM4, & 
                                                            PSIH10, &
                                                            PSIM10, &
                                                            DENOMQ, &
@@ -370,7 +370,7 @@ CONTAINS
                                                           DENOMT2, &
                                                             WSPDI, &
                                                            GZ2OZ0, &
-                                                           GZ4OZ0, & ! PSH
+                                                           GZ4OZ0, & 
                                                            GZ10OZ0
 !
       REAL,     DIMENSION( its:ite )        ::                     &
@@ -385,15 +385,15 @@ CONTAINS
       INTEGER ::  N,I,K,KK,L,NZOL,NK,NZOL2,NZOL10
 
       REAL    ::  PL,THCON,TVCON,E1
-      REAL    ::  ZL,TSKV,DTHVDZ,DTHVM,VCONV,RZOL,RZOL2,RZOL10,ZOL2,ZOL4,ZOL10 ! PSH
-      REAL    ::  DTG,PSIX,DTTHX,PSIX10,PSIX4,PSIT,PSIT2,PSIQ,PSIQ2,PSIQ10 ! PSH
+      REAL    ::  ZL,TSKV,DTHVDZ,DTHVM,VCONV,RZOL,RZOL2,RZOL10,ZOL2,ZOL4,ZOL10 
+      REAL    ::  DTG,PSIX,DTTHX,PSIX10,PSIX4,PSIT,PSIT2,PSIQ,PSIQ2,PSIQ10 
       REAL    ::  FLUXC,VSGD,Z0Q,VISC,RESTAR,CZIL,GZ0OZQ,GZ0OZT
       REAL    ::  ZW, ZN1, ZN2
 !
 ! .... paj ...
 !
       REAL    :: zolzz,zol0
-      REAL    :: depth,depth_b ! PSH
+      REAL    :: depth,depth_b 
 !     REAL    :: zolri,zolri2
 !     REAL    :: psih_stable,psim_stable,psih_unstable,psim_unstable
 !     REAL    :: psih_stable_full,psim_stable_full,psih_unstable_full,psim_unstable_full
@@ -600,7 +600,7 @@ CONTAINS
 !
         zolzz=zol(I)*(za(I)+znt(I))/za(I) ! (z+z0/L
         zol10=zol(I)*(10.+znt(I))/za(I)   ! (10+z0)/L
-        zol4=zol(I)*(4.+znt(I))/za(I)     ! (4+z0)/L ! PSH
+        zol4=zol(I)*(4.+znt(I))/za(I)     ! (4+z0)/L 
         zol2=zol(I)*(2.+znt(I))/za(I)     ! (2+z0)/L
         zol0=zol(I)*znt(I)/za(I)          ! z0/L
         ZL2=(2.)/ZA(I)*ZOL(I)             ! 2/L      
@@ -630,8 +630,8 @@ CONTAINS
         psim2(I)=psim_stable(zol2)-psim_stable(zol0)
         psih2(I)=psih_stable(zol2)-psih_stable(zol0)
 !
-        psim4(I)=psim_stable(zol4)-psim_stable(zol0) ! PSH 
-        psih4(I)=psih_stable(zol4)-psih_stable(zol0) ! PSH 
+        psim4(I)=psim_stable(zol4)-psim_stable(zol0)  
+        psih4(I)=psih_stable(zol4)-psih_stable(zol0)  
 ! ... paj: preparations to compute PSIQ. Follows CB05+Carlson Boland JAM 1978.
 !
         pq(I)=psih_stable(zol(I))-psih_stable(zl)
@@ -653,8 +653,8 @@ CONTAINS
         PSIH10(I)=PSIM10(I)                                           
         PSIM2(I)=0.                                                  
         PSIH2(I)=PSIM2(I)                                           
-        PSIM4(I)=0.        ! PSH                                          
-        PSIH4(I)=PSIM4(I)  ! PSH                                         
+        PSIM4(I)=0.                                                  
+        PSIH4(I)=PSIM4(I)                                           
 !
 ! paj: preparations to compute PSIQ.
 !
@@ -683,8 +683,8 @@ CONTAINS
         psim2(I)=psim_unstable(zol2)-psim_unstable(zol0)
         psih2(I)=psih_unstable(zol2)-psih_unstable(zol0)
 !
-        psim4(I)=psim_unstable(zol4)-psim_unstable(zol0) ! PSH 
-        psih4(I)=psih_unstable(zol4)-psih_unstable(zol0) ! PSH 
+        psim4(I)=psim_unstable(zol4)-psim_unstable(zol0)  
+        psih4(I)=psih_unstable(zol4)-psih_unstable(zol0)  
 ! ... paj: preparations to compute PSIQ 
 !
         pq(I)=psih_unstable(zol(I))-psih_unstable(zl)
@@ -696,12 +696,12 @@ CONTAINS
         PSIH(I)=AMIN1(PSIH(I),0.9*GZ1OZ0(I))
         PSIM(I)=AMIN1(PSIM(I),0.9*GZ1OZ0(I))
         PSIH2(I)=AMIN1(PSIH2(I),0.9*GZ2OZ0(I))
-        PSIH4(I)=AMIN1(PSIH4(I),0.9*GZ4OZ0(I)) ! PSH
+        PSIH4(I)=AMIN1(PSIH4(I),0.9*GZ4OZ0(I)) 
         PSIM10(I)=AMIN1(PSIM10(I),0.9*GZ10OZ0(I))
 !
 ! AHW: mods to compute ck, cd
         PSIH10(I)=AMIN1(PSIH10(I),0.9*GZ10OZ0(I))
-        PSIH4(I)=AMIN1(PSIH4(I),0.9*GZ4OZ0(I)) ! PSH
+        PSIH4(I)=AMIN1(PSIH4(I),0.9*GZ4OZ0(I)) 
 
         RMOL(I) = ZOL(I)/ZA(I)  
 
@@ -713,7 +713,7 @@ CONTAINS
       DO 330 I=its,ite
         DTG=THX(I)-THGB(I)                                                   
         PSIX=GZ1OZ0(I)-PSIM(I)                                                   
-        PSIX4=GZ4OZ0(I)-PSIM4(I) ! PSH
+        PSIX4=GZ4OZ0(I)-PSIM4(I) 
         PSIX10=GZ10OZ0(I)-PSIM10(I)
 
 !     LOWER LIMIT ADDED TO PREVENT LARGE FLHC IN SOIL MODEL
@@ -748,24 +748,24 @@ CONTAINS
            zolzz=zol(I)*(za(I)+z0t)/za(I)    ! (z+z0t)/L
            zol10=zol(I)*(10.+z0t)/za(I)   ! (10+z0t)/L
            zol2=zol(I)*(2.+z0t)/za(I)     ! (2+z0t)/L
-           zol4=zol(I)*(4.+z0t)/za(I)     ! (4+z0t)/L ! PSH
+           zol4=zol(I)*(4.+z0t)/za(I)     ! (4+z0t)/L 
            zol0=zol(I)*z0t/za(I)          ! z0t/L
 !
               if (zol(I).gt.0.) then
               psih(I)=psih_stable(zolzz)-psih_stable(zol0)
               psih10(I)=psih_stable(zol10)-psih_stable(zol0)
-              psih4(I)=psih_stable(zol4)-psih_stable(zol0) ! PSH
+              psih4(I)=psih_stable(zol4)-psih_stable(zol0) 
               psih2(I)=psih_stable(zol2)-psih_stable(zol0)
               else
                 if (zol(I).eq.0) then
                 psih(I)=0.
                 psih10(I)=0.
-                psih4(I)=0. ! PSH
+                psih4(I)=0. 
                 psih2(I)=0.
                 else
                 psih(I)=psih_unstable(zolzz)-psih_unstable(zol0)
                 psih10(I)=psih_unstable(zol10)-psih_unstable(zol0)
-                psih4(I)=psih_unstable(zol4)-psih_unstable(zol0) ! PSH
+                psih4(I)=psih_unstable(zol4)-psih_unstable(zol0) 
                 psih2(I)=psih_unstable(zol2)-psih_unstable(zol0)
                 endif
               endif
@@ -774,25 +774,25 @@ CONTAINS
 
            zolzz=zol(I)*(za(I)+z0q)/za(I)    ! (z+z0q)/L
            zol10=zol(I)*(10.+z0q)/za(I)   ! (10+z0q)/L
-           zol4=zol(I)*(4.+z0q)/za(I)     ! (4+z0q)/L ! PSH
+           zol4=zol(I)*(4.+z0q)/za(I)     ! (4+z0q)/L 
            zol2=zol(I)*(2.+z0q)/za(I)     ! (2+z0q)/L
            zol0=zol(I)*z0q/za(I)          ! z0q/L
 !
               if (zol(I).gt.0.) then
               psih(I)=psih_stable(zolzz)-psih_stable(zol0)
               psih10(I)=psih_stable(zol10)-psih_stable(zol0)
-              psih4(I)=psih_stable(zol4)-psih_stable(zol0) ! PSH
+              psih4(I)=psih_stable(zol4)-psih_stable(zol0) 
               psih2(I)=psih_stable(zol2)-psih_stable(zol0)
               else
                 if (zol(I).eq.0) then
                 psih(I)=0.
                 psih10(I)=0.
-                psih4(I)=0. ! PSH
+                psih4(I)=0. 
                 psih2(I)=0.
                 else
                 psih(I)=psih_unstable(zolzz)-psih_unstable(zol0)
                 psih10(I)=psih_unstable(zol10)-psih_unstable(zol0)
-                psih4(I)=psih_unstable(zol4)-psih_unstable(zol0) ! PSH
+                psih4(I)=psih_unstable(zol4)-psih_unstable(zol0) 
                 psih2(I)=psih_unstable(zol2)-psih_unstable(zol0)
                 endif
               endif
@@ -815,25 +815,25 @@ CONTAINS
 !
            zolzz=zol(I)*(za(I)+z0q)/za(I)    ! (z+z0q)/L
            zol10=zol(I)*(10.+z0q)/za(I)   ! (10+z0q)/L
-           zol4=zol(I)*(4.+z0q)/za(I)     ! (4+z0q)/L ! PSH
+           zol4=zol(I)*(4.+z0q)/za(I)     ! (4+z0q)/L 
            zol2=zol(I)*(2.+z0q)/za(I)     ! (2+z0q)/L
            zol0=zol(I)*z0q/za(I)          ! z0q/L
 !
               if (zol(I).gt.0.) then
               psih(I)=psih_stable(zolzz)-psih_stable(zol0)
               psih10(I)=psih_stable(zol10)-psih_stable(zol0)
-              psih4(I)=psih_stable(zol4)-psih_stable(zol0) ! PSH
+              psih4(I)=psih_stable(zol4)-psih_stable(zol0) 
               psih2(I)=psih_stable(zol2)-psih_stable(zol0)
               else
                 if (zol(I).eq.0) then
                 psih(I)=0.
                 psih10(I)=0.
-                psih4(I)=0. ! PSH
+                psih4(I)=0. 
                 psih2(I)=0.
                 else
                 psih(I)=psih_unstable(zolzz)-psih_unstable(zol0)
                 psih10(I)=psih_unstable(zol10)-psih_unstable(zol0)
-                psih4(I)=psih_unstable(zol4)-psih_unstable(zol0) ! PSH
+                psih4(I)=psih_unstable(zol4)-psih_unstable(zol0) 
                 psih2(I)=psih_unstable(zol2)-psih_unstable(zol0)
                 endif
               endif
@@ -861,25 +861,25 @@ CONTAINS
 !
            zolzz=zol(I)*(za(I)+z0t)/za(I)    ! (z+z0t)/L
            zol10=zol(I)*(10.+z0t)/za(I)   ! (10+z0t)/L
-           zol4=zol(I)*(4.+z0t)/za(I)     ! (4+z0t)/L ! PSH
+           zol4=zol(I)*(4.+z0t)/za(I)     ! (4+z0t)/L 
            zol2=zol(I)*(2.+z0t)/za(I)     ! (2+z0t)/L
            zol0=zol(I)*z0t/za(I)          ! z0t/L
 !
               if (zol(I).gt.0.) then
               psih(I)=psih_stable(zolzz)-psih_stable(zol0)
               psih10(I)=psih_stable(zol10)-psih_stable(zol0)
-              psih4(I)=psih_stable(zol4)-psih_stable(zol0) ! PSH
+              psih4(I)=psih_stable(zol4)-psih_stable(zol0) 
               psih2(I)=psih_stable(zol2)-psih_stable(zol0)
               else
                 if (zol(I).eq.0) then
                 psih(I)=0.
                 psih10(I)=0.
-                psih4(I)=0. ! PSH
+                psih4(I)=0. 
                 psih2(I)=0.
                 else
                 psih(I)=psih_unstable(zolzz)-psih_unstable(zol0)
                 psih10(I)=psih_unstable(zol10)-psih_unstable(zol0)
-                psih4(I)=psih_unstable(zol4)-psih_unstable(zol0) ! PSH
+                psih4(I)=psih_unstable(zol4)-psih_unstable(zol0) 
                 psih2(I)=psih_unstable(zol2)-psih_unstable(zol0)
                 endif
               endif
@@ -894,25 +894,25 @@ CONTAINS
 !
            zolzz=zol(I)*(za(I)+z0q)/za(I)    ! (z+z0q)/L
            zol10=zol(I)*(10.+z0q)/za(I)   ! (10+z0q)/L
-           zol4=zol(I)*(4.+z0q)/za(I)     ! (4+z0q)/L ! PSH
+           zol4=zol(I)*(4.+z0q)/za(I)     ! (4+z0q)/L 
            zol2=zol(I)*(2.+z0q)/za(I)     ! (2+z0q)/L
            zol0=zol(I)*z0q/za(I)          ! z0q/L
 !
               if (zol(I).gt.0.) then
               psih(I)=psih_stable(zolzz)-psih_stable(zol0)
               psih10(I)=psih_stable(zol10)-psih_stable(zol0)
-              psih4(I)=psih_stable(zol4)-psih_stable(zol0) ! PSH
+              psih4(I)=psih_stable(zol4)-psih_stable(zol0) 
               psih2(I)=psih_stable(zol2)-psih_stable(zol0)
               else
                 if (zol(I).eq.0) then
                 psih(I)=0.
                 psih10(I)=0.
-                psih4(I)=0. ! PSH
+                psih4(I)=0. 
                 psih2(I)=0.
                 else
                 psih(I)=psih_unstable(zolzz)-psih_unstable(zol0)
                 psih10(I)=psih_unstable(zol10)-psih_unstable(zol0)
-                psih4(I)=psih_unstable(zol4)-psih_unstable(zol0) ! PSH
+                psih4(I)=psih_unstable(zol4)-psih_unstable(zol0) 
                 psih2(I)=psih_unstable(zol2)-psih_unstable(zol0)
                 endif
               endif
@@ -952,25 +952,25 @@ CONTAINS
 !
            zolzz=zol(I)*(za(I)+z0t)/za(I)    ! (z+z0t)/L
            zol10=zol(I)*(10.+z0t)/za(I)   ! (10+z0t)/L
-           zol4=zol(I)*(4.+z0t)/za(I)     ! (4+z0t)/L ! PSH
+           zol4=zol(I)*(4.+z0t)/za(I)     ! (4+z0t)/L 
            zol2=zol(I)*(2.+z0t)/za(I)     ! (2+z0t)/L
            zol0=zol(I)*z0t/za(I)          ! z0t/L
 !
               if (zol(I).gt.0.) then
               psih(I)=psih_stable(zolzz)-psih_stable(zol0)
               psih10(I)=psih_stable(zol10)-psih_stable(zol0)
-              psih4(I)=psih_stable(zol4)-psih_stable(zol0) ! PSH
+              psih4(I)=psih_stable(zol4)-psih_stable(zol0) 
               psih2(I)=psih_stable(zol2)-psih_stable(zol0)
               else
                 if (zol(I).eq.0) then
                 psih(I)=0.
                 psih10(I)=0.
-                psih4(I)=0. ! PSH
+                psih4(I)=0. 
                 psih2(I)=0.
                 else
                 psih(I)=psih_unstable(zolzz)-psih_unstable(zol0)
                 psih10(I)=psih_unstable(zol10)-psih_unstable(zol0)
-                psih4(I)=psih_unstable(zol4)-psih_unstable(zol0) ! PSH
+                psih4(I)=psih_unstable(zol4)-psih_unstable(zol0) 
                 psih2(I)=psih_unstable(zol2)-psih_unstable(zol0)
                 endif
               endif
@@ -999,8 +999,8 @@ CONTAINS
 
         U10(I)=UX(I)*PSIX10/PSIX                                    
         V10(I)=VX(I)*PSIX10/PSIX                                   
-        U4(I)=UX(I)*PSIX4/PSIX  ! PSH                                   
-        V4(I)=VX(I)*PSIX4/PSIX  ! PSH                                  
+        U4(I)=UX(I)*PSIX4/PSIX                                     
+        V4(I)=VX(I)*PSIX4/PSIX                                    
         TH2(I)=THGB(I)+DTG*PSIT2/PSIT                                
         Q2(I)=QSFC(I)+(QX(I)-QSFC(I))*PSIQ2/PSIQ                   
         T2(I) = TH2(I)*(PSFCPA(I)/P1000mb)**ROVCP                     
