@@ -368,7 +368,7 @@ SUBROUTINE calc_ts( grid )
 
    ! Local variables
    INTEGER :: i, k, mm, n, ix, iy, rc
-   REAL :: earth_u, earth_v,                       &
+   REAL :: earth_u, earth_v, earth_u4, earth_v4,     &
            output_t, output_q, clw, xtime_minutes
    REAL, PARAMETER :: MISSING = -999.0
    REAL, ALLOCATABLE, DIMENSION(:) :: p8w
@@ -412,6 +412,8 @@ SUBROUTINE calc_ts( grid )
 #if (EM_CORE == 1)
             earth_u = grid%u_2(ix,1,iy)*grid%cosa(ix,iy)-grid%v_2(ix,1,iy)*grid%sina(ix,iy)
             earth_v = grid%v_2(ix,1,iy)*grid%cosa(ix,iy)+grid%u_2(ix,1,iy)*grid%sina(ix,iy)
+            earth_u4 = grid%u4(ix,iy)*grid%cosa(ix,iy)-grid%v4(ix,iy)*grid%sina(ix,iy)
+            earth_v4 = grid%v4(ix,iy)*grid%cosa(ix,iy)+grid%u4(ix,iy)*grid%sina(ix,iy)
             IF (grid%use_theta_m == 1) THEN
                output_t = (grid%t_2(ix,1,iy)+T0)/(1.+R_v/R_d*grid%moist(ix,1,iy,P_QV)) - T0
             ELSE
@@ -420,6 +422,8 @@ SUBROUTINE calc_ts( grid )
 #else
             earth_u = grid%u(ix,1,iy)
             earth_v = grid%v(ix,1,iy)
+            earth_u4 = grid%u(ix,1,iy)
+            earth_v4 = grid%v(ix,1,iy)
             output_t = grid%t(ix,1,iy)
 #endif
             output_q = grid%moist(ix,1,iy,P_QV)
@@ -446,10 +450,14 @@ SUBROUTINE calc_ts( grid )
             END DO
             earth_u = grid%u10(ix,iy)*grid%cosa(ix,iy)-grid%v10(ix,iy)*grid%sina(ix,iy)
             earth_v = grid%v10(ix,iy)*grid%cosa(ix,iy)+grid%u10(ix,iy)*grid%sina(ix,iy)
+            earth_u4 = grid%u4(ix,iy)*grid%cosa(ix,iy)-grid%v4(ix,iy)*grid%sina(ix,iy)
+            earth_v4 = grid%v4(ix,iy)*grid%cosa(ix,iy)+grid%u4(ix,iy)*grid%sina(ix,iy)
             output_q = grid%q2(ix,iy)
 #else
             earth_u = grid%u10(ix,iy)
             earth_v = grid%v10(ix,iy)
+            earth_u4 = grid%u4(ix,iy)
+            earth_v4 = grid%v4(ix,iy)
             output_q = grid%qsfc(ix,iy)
 #endif
             output_t = grid%t2(ix,iy)
@@ -549,6 +557,8 @@ SUBROUTINE calc_ts( grid )
          grid%ts_rainc(n,i)  = grid%rainc(ix,iy)
          grid%ts_rainnc(n,i) = grid%rainnc(ix,iy)
          grid%ts_tsk(n,i)  = grid%tsk(ix,iy)
+         grid%ts_u4(n,i)    = earth_u4
+         grid%ts_v4(n,i)    = earth_v4
          IF ( model_config_rec%process_time_series == 2 ) THEN
             !!! Solar diagnostics
             grid%ts_cldfrac2d(n,i) = grid%cldfrac2d(ix,iy)
@@ -646,6 +656,8 @@ SUBROUTINE calc_ts( grid )
          grid%ts_hour(n,i) = 1.E30
          grid%ts_u(n,i)    = 1.E30
          grid%ts_v(n,i)    = 1.E30
+         grid%ts_u4(n,i)   = 1.E30
+         grid%ts_v4(n,i)   = 1.E30
          grid%ts_t(n,i)    = 1.E30
          grid%ts_q(n,i)    = 1.E30
          grid%ts_psfc(n,i) = 1.E30
@@ -1022,6 +1034,12 @@ SUBROUTINE write_ts( grid )
    ts_buf(:,:) = grid%ts_ust(:,:)
    CALL wrf_dm_min_reals(ts_buf(:,:),grid%ts_ust(:,:),grid%ts_buf_size*grid%max_ts_locs)
 
+   ts_buf(:,:) = grid%ts_u4(:,:)
+   CALL wrf_dm_min_reals(ts_buf(:,:),grid%ts_u4(:,:),grid%ts_buf_size*grid%max_ts_locs)
+
+   ts_buf(:,:) = grid%ts_v4(:,:)
+   CALL wrf_dm_min_reals(ts_buf(:,:),grid%ts_v4(:,:),grid%ts_buf_size*grid%max_ts_locs)
+
    DEALLOCATE(ts_buf)
 #endif
 
@@ -1043,7 +1061,7 @@ SUBROUTINE write_ts( grid )
 
 #if (EM_CORE == 1)
             IF ( model_config_rec%process_time_series == 1 ) THEN
-               WRITE(UNIT=iunit,FMT='(i2,f13.6,i5,i5,i5,1x,16(f13.5,1x))')  &
+               WRITE(UNIT=iunit,FMT='(i2,f13.6,i5,i5,i5,1x,18(f13.5,1x))')  &
                                  grid%id, grid%ts_hour(n,i),                &
                                  grid%id_tsloc(i), ix, iy,                  &
                                  grid%ts_t(n,i),                            &
@@ -1061,7 +1079,9 @@ SUBROUTINE write_ts( grid )
                                  grid%ts_rainnc(n,i),                       &
                                  grid%ts_clw(n,i),                          &
                                  grid%ts_qfx(n,i),                          &
-                                 grid%ts_ust(n,i)
+                                 grid%ts_ust(n,i),                          &
+                                 grid%ts_u4(n,i),                           &
+                                 grid%ts_v4(n,i)
             ELSE
                !!! WRF-Solar diagnostics
                WRITE(UNIT=iunit,FMT='(i2,f13.6,i5,i5,i5,1x,49(f13.5,1x))')  &
