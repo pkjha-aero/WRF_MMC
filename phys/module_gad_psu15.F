@@ -23,7 +23,7 @@ FUNCTION calc_rpm_psu15( x ) result( rpm )
 
   REAL, INTENT( in ) :: x
 
-  REAL, PARAMETER :: nws = 26
+  INTEGER, PARAMETER :: nws = 26
 
   REAL, DIMENSION( 0:nws-1 ) :: ws
   REAL, DIMENSION( 0:nws-1 ) :: rp
@@ -76,7 +76,7 @@ FUNCTION calc_pitch_psu15( x ) RESULT( pitch )
  
   REAL, INTENT( IN ) :: x
 
-  REAL, PARAMETER :: nws = 26
+  INTEGER, PARAMETER :: nws = 26
 
   REAL, DIMENSION( 0:nws-1 ) :: ws 
   REAL, DIMENSION( 0:nws-1 ) :: p
@@ -390,7 +390,7 @@ FUNCTION calc_twist_psu15( x ) RESULT( twist )
   
   REAL, INTENT( IN ) :: x
 
-  REAL, PARAMETER :: ns = 5
+  INTEGER, PARAMETER :: ns = 5
 
   REAL, DIMENSION( 0:ns-1 ) :: rf
   REAL, DIMENSION( 0:ns-1 ) :: r
@@ -464,7 +464,7 @@ FUNCTION calc_chord_psu15( x ) RESULT( chord )
 
   REAL, INTENT( IN ) :: x
 
-  REAL, PARAMETER :: ns = 10
+  INTEGER, PARAMETER :: ns = 10
 
   REAL, DIMENSION( 0:ns-1 ) :: rf
   REAL, DIMENSION( 0:ns-1 ) :: r
@@ -550,7 +550,7 @@ FUNCTION calc_cl_psu15( x,y ) RESULT( cl )
   
   REAL, INTENT( IN ) :: x,y
 
-  REAL, PARAMETER :: ns = 11
+  INTEGER, PARAMETER :: ns = 11
 
   REAL, DIMENSION( 0:ns-1 ) :: r,rf
 
@@ -635,7 +635,7 @@ FUNCTION calc_cd_psu15( x,y ) RESULT( cd )
   
   REAL, INTENT( IN ) :: x,y
 
-  REAL, PARAMETER :: ns = 11
+  INTEGER, PARAMETER :: ns = 11
 
   REAL, DIMENSION( 0:ns-1 ) :: r,rf
 
@@ -731,7 +731,7 @@ FUNCTION calc_cl2_psu15( y ) RESULT( cl2 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: ns = 41
+  INTEGER, PARAMETER :: ns = 41
 
   REAL, DIMENSION( 0:1,0:ns-1 ) :: cl
 
@@ -819,7 +819,7 @@ FUNCTION calc_cl3_psu15( y ) RESULT( cl3 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: ns = 41
+  INTEGER, PARAMETER :: ns = 41
 
   REAL, DIMENSION( 0:1,0:ns-1 ) :: cl
 
@@ -908,7 +908,7 @@ FUNCTION calc_cl4_psu15( y ) RESULT( cl4 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: ns = 41
+  INTEGER, PARAMETER :: ns = 41
 
   REAL, DIMENSION( 0:1,0:ns-1 ) :: cl
 
@@ -996,7 +996,7 @@ FUNCTION calc_cl5_psu15( y ) RESULT( cl5 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: ns = 41
+  INTEGER, PARAMETER :: ns = 41
 
   REAL, DIMENSION( 0:1,0:ns-1 ) :: cl
 
@@ -1085,7 +1085,7 @@ FUNCTION calc_cl6_psu15( y ) RESULT( cl6 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: ns = 50
+  INTEGER, PARAMETER :: ns = 50
 
   REAL, DIMENSION( 0:1,0:ns-1 ) :: cl
 
@@ -1183,7 +1183,7 @@ FUNCTION calc_cl7_psu15( y ) RESULT( cl7 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: ns = 44
+  INTEGER, PARAMETER :: ns = 44
 
   REAL, DIMENSION( 0:1,0:ns-1 ) :: cl
 
@@ -1275,7 +1275,7 @@ FUNCTION calc_cl8_psu15( y ) RESULT( cl8 )
  
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: ns = 45
+  INTEGER, PARAMETER :: ns = 45
 
   REAL, DIMENSION( 0:1,0:ns-1 ) :: cl
 
@@ -1368,7 +1368,7 @@ FUNCTION calc_cl9_psu15( y ) RESULT( cl9 )
 
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: ns = 40
+  INTEGER, PARAMETER :: ns = 40
 
   REAL, DIMENSION( 0:1,0:ns-1 ) :: cl
 
@@ -1456,7 +1456,7 @@ FUNCTION calc_cl10_psu15( y ) RESULT( cl10 )
 
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: ns = 38
+  INTEGER, PARAMETER :: ns = 38
 
   REAL, DIMENSION( 0:1,0:ns-1 ) :: cl
 
@@ -1561,7 +1561,7 @@ FUNCTION calc_cd2_psu15( y ) RESULT( cd2 )
 
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: ns = 41
+  INTEGER, PARAMETER :: ns = 41
 
   REAL, DIMENSION( 0:1,0:ns-1 ) :: cd
 
@@ -1646,7 +1646,7 @@ FUNCTION calc_cd3_psu15( y ) RESULT( cd3 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: ns = 41
+  INTEGER, PARAMETER :: ns = 41
 
   REAL, DIMENSION( 0:1,0:ns-1 ) :: cd
 
@@ -1731,7 +1731,7 @@ FUNCTION calc_cd4_psu15( y ) RESULT( cd4 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: ns = 41
+  INTEGER, PARAMETER :: ns = 41
 
   REAL, DIMENSION( 0:1,0:ns-1 ) :: cd
 
@@ -1815,7 +1815,7 @@ FUNCTION calc_cd5_psu15( y ) RESULT( cd5 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: ns = 41
+  INTEGER, PARAMETER :: ns = 41
 
   REAL, DIMENSION( 0:1,0:ns-1 ) :: cd
 
@@ -1899,7 +1899,7 @@ FUNCTION calc_cd6_psu15( y ) RESULT( cd6 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: ns = 50
+  INTEGER, PARAMETER :: ns = 50
 
   REAL, DIMENSION( 0:1,0:ns-1 ) :: cd
 
@@ -1992,7 +1992,7 @@ FUNCTION calc_cd7_psu15( y ) RESULT( cd7 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: ns = 44
+  INTEGER, PARAMETER :: ns = 44
 
   REAL, DIMENSION( 0:1,0:ns-1 ) :: cd
 
@@ -2080,7 +2080,7 @@ FUNCTION calc_cd8_psu15( y ) RESULT( cd8 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: ns = 45
+  INTEGER, PARAMETER :: ns = 45
 
   REAL, DIMENSION( 0:1,0:ns-1 ) :: cd
 
@@ -2168,7 +2168,7 @@ FUNCTION calc_cd9_psu15( y ) RESULT( cd9 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: ns = 40
+  INTEGER, PARAMETER :: ns = 40
 
   REAL, DIMENSION( 0:1,0:ns-1 ) :: cd
 
@@ -2252,7 +2252,7 @@ FUNCTION calc_cd10_psu15( y ) RESULT( cd10 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: ns = 38
+  INTEGER, PARAMETER :: ns = 38
 
   REAL, DIMENSION( 0:1,0:ns-1 ) :: cd
 
