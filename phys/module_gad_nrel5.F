@@ -1,6 +1,6 @@
 MODULE module_gad_nrel5
 
-REAL, PARAMETER :: pi=3.1415926535897932384626433
+INTEGER, PARAMETER :: pi=3.1415926535897932384626433
 
 CONTAINS
 
@@ -23,7 +23,7 @@ FUNCTION calc_rpm_nrel5( x ) result( rpm )
 
   REAL, INTENT( in ) :: x
 
-  REAL, PARAMETER :: nws = 50
+  INTEGER, PARAMETER :: nws = 50
 
   REAL, DIMENSION( 0:nws-1 ) :: ws
   REAL, DIMENSION( 0:nws-1 ) :: rp
@@ -167,7 +167,7 @@ FUNCTION calc_pitch_nrel5( x ) RESULT( pitch )
  
   REAL, INTENT( IN ) :: x
 
-  REAL, PARAMETER :: nws = 50
+  INTEGER, PARAMETER :: nws = 50
 
   REAL, DIMENSION( 0:nws-1 ) :: ws 
   REAL, DIMENSION( 0:nws-1 ) :: p
@@ -587,7 +587,7 @@ FUNCTION calc_twist_nrel5( x ) RESULT( twist )
   
   REAL, INTENT( IN ) :: x
 
-  REAL, PARAMETER :: ns = 19
+  INTEGER, PARAMETER :: ns = 19
 
   REAL, DIMENSION( 0:ns-1 ) :: r
   REAL, DIMENSION( 0:ns-1 ) :: t
@@ -684,7 +684,7 @@ FUNCTION calc_chord_nrel5( x ) RESULT( chord )
 
   REAL, INTENT( IN ) :: x
 
-  REAL, PARAMETER :: ns = 19
+  INTEGER, PARAMETER :: ns = 19
 
   REAL, DIMENSION( 0:ns-1 ) :: r
   REAL, DIMENSION( 0:ns-1 ) :: c
@@ -785,7 +785,7 @@ FUNCTION calc_cl_nrel5( x,y ) RESULT( cl )
   
   REAL, INTENT( IN ) :: x,y
 
-  REAL, PARAMETER :: ns = 9
+  INTEGER, PARAMETER :: ns = 9
 
   REAL, DIMENSION( 0:ns-1 ) :: r
 
@@ -888,7 +888,7 @@ FUNCTION calc_cl3_nrel5( y ) RESULT( cl3 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: na = 136
+  INTEGER, PARAMETER :: na = 136
 
   REAL, DIMENSION( 0:1,0:na-1 ) :: cl
 
@@ -1070,7 +1070,7 @@ FUNCTION calc_cl4_nrel5( y ) RESULT( cl4 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: na = 135
+  INTEGER, PARAMETER :: na = 135
 
   REAL, DIMENSION( 0:1,0:na-1 ) :: cl
 
@@ -1251,7 +1251,7 @@ FUNCTION calc_cl5_nrel5( y ) RESULT( cl5 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: na = 143
+  INTEGER, PARAMETER :: na = 143
 
   REAL, DIMENSION( 0:1,0:na-1 ) :: cl
 
@@ -1440,7 +1440,7 @@ FUNCTION calc_cl6_nrel5( y ) RESULT( cl6 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: na = 140
+  INTEGER, PARAMETER :: na = 140
 
   REAL, DIMENSION( 0:1,0:na-1 ) :: cl
 
@@ -1626,7 +1626,7 @@ FUNCTION calc_cl7_nrel5( y ) RESULT( cl7 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: na = 142
+  INTEGER, PARAMETER :: na = 142
 
   REAL, DIMENSION( 0:1,0:na-1 ) :: cl
 
@@ -1814,7 +1814,7 @@ Function calc_cl8_nrel5( y ) RESULT( cl8 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: na = 127
+  INTEGER, PARAMETER :: na = 127
 
   REAL, DIMENSION( 0:1,0:na-1 ) :: cl
 
@@ -2001,7 +2001,7 @@ FUNCTION calc_cd_nrel5( x,y ) RESULT( cd )
   
   REAL, INTENT( IN ) :: x,y
 
-  REAL, PARAMETER :: ns = 9
+  INTEGER, PARAMETER :: ns = 9
 
   REAL, DIMENSION( 0:ns-1 ) :: r
 
@@ -2102,7 +2102,7 @@ FUNCTION calc_cd3_nrel5( y ) RESULT( cd3 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: na = 136
+  INTEGER, PARAMETER :: na = 136
 
   REAL, DIMENSION( 0:1,0:na-1 ) :: cd
 
@@ -2284,7 +2284,7 @@ FUNCTION calc_cd4_nrel5( y ) RESULT( cd4 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: na = 135
+  INTEGER, PARAMETER :: na = 135
 
   REAL, DIMENSION( 0:1,0:na-1 ) :: cd
 
@@ -2465,7 +2465,7 @@ FUNCTION calc_cd5_nrel5( y ) RESULT( cd5 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: na = 143
+  INTEGER, PARAMETER :: na = 143
 
   REAL, DIMENSION( 0:1,0:na-1 ) :: cd
 
@@ -2654,7 +2654,7 @@ FUNCTION calc_cd6_nrel5( y ) RESULT( cd6 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: na = 140
+  INTEGER, PARAMETER :: na = 140
 
   REAL, DIMENSION( 0:1,0:na-1 ) :: cd
 
@@ -2840,7 +2840,7 @@ FUNCTION calc_cd7_nrel5( y ) RESULT( cd7 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: na = 142
+  INTEGER, PARAMETER :: na = 142
 
   REAL, DIMENSION( 0:1,0:na-1 ) :: cd
 
@@ -3028,7 +3028,7 @@ Function calc_cd8_nrel5( y ) RESULT( cd8 )
   
   REAL, INTENT( IN ) :: y
 
-  REAL, PARAMETER :: na = 127
+  INTEGER, PARAMETER :: na = 127
 
   REAL, DIMENSION( 0:1,0:na-1 ) :: cd
 
