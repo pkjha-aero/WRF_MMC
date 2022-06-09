@@ -60,6 +60,9 @@ MODULES = \
 	module_cu_camzm.o \
 	module_bl_temf.o \
 	module_bl_gbmpbl.o \
+        module_gen_act_disk.o \
+        module_gad_psu15.o \
+	module_gad_nrel5.o \
 	module_cu_g3.o \
 	module_cu_kf.o  \
 	module_cu_bmj.o \
@@ -180,6 +183,7 @@ MODULES = \
 	module_gfs_physcons.o \
 	module_progtm.o \
 	module_pbl_driver.o \
+        module_wind_param_driver.o \
 	module_data_gocart_dust.o \
         module_dust_emis.o \
 	module_cumulus_driver.o \

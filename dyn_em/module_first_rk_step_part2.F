@@ -69,6 +69,7 @@ CONTAINS
     USE module_pbl3d, ONLY : Init_temp_arrays_for_substep, Update_wrf_tends_temp_state_and_zero_tends, Allocate_temp_tends, Deallocate_temp_tends, &
                              Calc_turb_fluxes_driver, Vertical_turb_mix, Horizontal_turb_mix
     USE module_les_cpm
+    USE module_wind_param_driver
 
     IMPLICIT NONE
 
@@ -391,7 +392,7 @@ BENCH_END(comp_diff_metrics_tim)
 !JDM Perturbations
 
 
-IF ( ( config_flags%meso_pblh_opt .EQ. 1 ) .AND. ( config_flags%km_opt .EQ. 4 ) ) THEN   
+IF ( ( config_flags%cpm_meso_pblh .EQ. 1 ) .AND. ( config_flags%km_opt .EQ. 4 ) ) THEN   
 
          !$OMP PARALLEL DO   &
          !$OMP PRIVATE ( ij )
@@ -414,7 +415,7 @@ ENDIF
 IF (  config_flags%cpm_opt .GT. 0 ) THEN   
 
    !JDM   IF (  config_flags%cpm_opt .LE. 6 ) THEN ! Leave hook for other options
-   
+
             !$OMP PARALLEL DO   &
             !$OMP PRIVATE ( ij )
             DO ij = 1 , grid%num_tiles
@@ -422,7 +423,10 @@ IF (  config_flags%cpm_opt .GT. 0 ) THEN
                CALL calc_cpm_t ( config_flags%cpm_opt,                       &
                                  config_flags%cpm_lim_z,                     &
                                  config_flags%cpm_amp,                       &
+                                 config_flags%cpm_pec,                       &
+                                 config_flags%cpm_rim,                       &
                                  config_flags%cpm_dt,                        &
+                                 config_flags%cpm_lambda,                    &
                                  config_flags%cpm_nb,                        &
                                  config_flags%cpm_sb,                        & 
                                  config_flags%cpm_eb,                        &
@@ -433,14 +437,14 @@ IF (  config_flags%cpm_opt .GT. 0 ) THEN
                                  config_flags%cpm_noff_ew_e,                 &
                                  config_flags%cpm_noff_ns_s,                 &
                                  config_flags%cpm_noff_ns_n,                 &
-                                 config_flags%cpm_nshift_ew,                 &
-                                 config_flags%cpm_nshift_ns,                 &
                                  config_flags%cpm_ngc_v,                     &
                                  config_flags%cpm_noff_v,                    &
                                  grid%prttms, grid%prtdt,                    &
                                  grid%prtseed, grid%pert_t,                  &  
-                                 config_flags%meso_pblh_opt, grid%meso_pblh, & 
-                                 grid%t_2, grid%u_2, grid%v_2, grid%rdz,     &
+                                 config_flags%cpm_meso_pblh, grid%meso_pblh, &
+                                 config_flags%cpm_pblh_check,                &
+                                 grid%t_2, grid%u_2, grid%v_2, grid%w_2,     &
+                                 grid%rdz, grid%rdzw,                        &
                                  grid%dx, grid%dt,                           & 
                                  ids, ide, jds, jde, kds, kde,               &
                                  ims, ime, jms, jme, kms, kme,               &
@@ -450,7 +454,7 @@ IF (  config_flags%cpm_opt .GT. 0 ) THEN
 
             ENDDO
             !$OMP END PARALLEL DO
-
+            
 !JDM   ENDIF
 
 ENDIF
@@ -701,6 +705,61 @@ IF ( ( config_flags%sfs_opt .GT. 0 ) .AND. ( config_flags%diff_opt .eq. 2 ) ) TH
                   nba_rij, n_nba_rij      ) 
 
 ENDIF
+
+!! ADDED BY MSG FOR GAD
+IF ( config_flags%wp_opt .GT. 0 ) THEN !JDM/BK April 16, 2013
+
+BENCH_START(wind_param_driver_tim)
+       !$OMP PARALLEL DO   &
+       !$OMP PRIVATE ( ij )
+
+       DO ij = 1 , grid%num_tiles
+
+          CALL wrf_debug ( 200 , ' call wind_param_driver' )
+          CALL wind_param_driver( grid, config_flags,                          &
+                                  ru_tendf, rv_tendf, rw_tendf,                &
+                                  grid%u_2, grid%v_2,  grid%w_2, grid%rdzw,    &
+                                  grid%muu, grid%muv,  grid%mut,               &
+                                  grid%dx,  grid%dy,   grid%dt,                &
+                                  grid%x_turbine,                              &
+                                  grid%y_turbine,                              &
+                                  grid%x_inflow,                               &
+!RSA
+                                  grid%y_inflow,                               &
+!RSA
+                                  grid%hub_height,                             &
+                                  grid%rotor_diameter,                         &
+                                  grid%blade_length,                           &
+                                  grid%theta_turbine,                          &
+                                  grid%cutinspd, grid%cutoutspd,               &
+!RSA
+                                  grid%turb_power,                             &
+!RSA
+                                  grid%acc_yaw_err,                            &
+                                  grid%wp_acc_u, grid%wp_acc_v, grid%wp_acc_w, &
+                                  grid%wp_ts,                                  &
+                                  grid%wp_thrust, grid%wp_torque,              &
+                                  grid%wp_rotrate, grid%wp_power,              &
+                                  config_flags%n_turbines,                     &
+                                  config_flags%n_timeseries,                   &
+                                  grid%v0t, grid%d0t, grid%itimestep,          &
+                                  grid%xlat_v, grid%xlong_u, grid%ht,          &
+!RSA
+                                  grid%fnm, grid%fnp,                          &
+!RSA
+                                  ids, ide, jds, jde, kds, kde,                &
+                                  ims, ime, jms, jme, kms, kme,                &
+                                  ips, ipe, jps, jpe, kps, kpe,                &
+                                  grid%i_start(ij), grid%i_end(ij),            &
+                                  grid%j_start(ij), grid%j_end(ij),            &
+                                  k_start    , k_end                           )
+       ENDDO
+       !$OMP END PARALLEL DO
+BENCH_END(wind_param_driver_tim)
+
+ENDIf
+
+!!
 
 #ifdef DM_PARALLEL
 !-----------------------------------------------------------------------

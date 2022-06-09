@@ -430,6 +430,8 @@ state    real   PSFC             ij     misc        1         -     i01rh01du   
 
 state    real   U10              ij     misc        1         -     irh01{22}{23}du     "U10"                "U at 10 M"         "m s-1"
 state    real   V10              ij     misc        1         -     irh01{22}{23}du     "V10"                "V at 10 M"         "m s-1"
+state    real   U4               ij     misc        1         -     rh          "U4"                 "U at 4 M"          "m s-1"
+state    real   V4               ij     misc        1         -     rh          "V4"                 "V at 4 M"          "m s-1"
 # LPI
 state    real   LPI              ij     misc        1         -     rhdu   "LPI"                 "Lightning Potential Index"      "m^2 s-2"
 
@@ -837,6 +839,8 @@ state    real   ts_clw          ?!       misc      -         -      -        "TS
 state    real   ts_rainc        ?!       misc      -         -      -        "TS_RAINC"       "Cumulus precip"
 state    real   ts_rainnc       ?!       misc      -         -      -        "TS_RAINNC"      "Grid-scale precip"
 state    real   ts_ust          ?!       misc      -         -      -        "TS_UST"         "U-star"
+state    real   ts_u4           ?!       misc      -         -      -        "TS_U4"          "4m wind U-component, earth-relative"
+state    real   ts_v4           ?!       misc      -         -      -        "TS_V4"          "4m wind V-component, earth-relative"
 
 # Time series of vertical profile of U, V, GHT, THETA, QVAPOR, PRESSURE
 state    real   ts_u_profile   ?!k       misc      -         -      -        "TS_U_PROFILE"   "Wind u-Component, earth relative, vertical profile" "m/s"
@@ -3379,8 +3383,8 @@ package   icedepth_one   seaice_thickness_opt==1     -             state:icedept
 
 #Time series options for text output
 package   notseries             process_time_series==0                 -             -
-package   tseries               process_time_series==1                 -             state:ts_hour,ts_u,ts_v,ts_q,ts_t,ts_psfc,ts_glw,ts_gsw,ts_hfx,ts_qfx,ts_lh,ts_tsk,ts_tslb,ts_clw,ts_rainc,ts_rainnc,ts_ust,ts_u_profile,ts_v_profile,ts_gph_profile,ts_th_profile,ts_p_profile,ts_w_profile,ts_tke_profile
-package   tseries_add_solar     process_time_series==2                 -             state:ts_hour,ts_u,ts_v,ts_q,ts_t,ts_psfc,ts_glw,ts_gsw,ts_hfx,ts_qfx,ts_lh,ts_tsk,ts_tslb,ts_clw,ts_rainc,ts_rainnc,ts_ust,ts_u_profile,ts_v_profile,ts_gph_profile,ts_th_profile,ts_cldfrac2d,ts_wvp,ts_lwp,ts_iwp,ts_swp,ts_lwp_tot,ts_iwp_tot,ts_swp_tot,ts_re_qc,ts_re_qi,ts_re_qs,ts_re_qc_tot,ts_re_qi_tot,ts_re_qs_tot,ts_tau_qc,ts_tau_qi,ts_tau_qs,ts_tau_qc_tot,ts_tau_qi_tot,ts_tau_qs_tot,ts_cbaseht,ts_ctopht,ts_cbaseht_tot,ts_ctopht_tot,ts_clrnidx,ts_p_profile,ts_w_profile,ts_swdown,ts_swddni,ts_swddif,ts_swdownc,ts_swddnic,ts_swdown2,ts_swddni2,ts_swddif2,ts_swdownc2,ts_swddnic2
+package   tseries               process_time_series==1                 -             state:ts_hour,ts_u,ts_v,ts_q,ts_t,ts_psfc,ts_glw,ts_gsw,ts_hfx,ts_qfx,ts_lh,ts_tsk,ts_tslb,ts_clw,ts_rainc,ts_rainnc,ts_ust,ts_u4,ts_v4,ts_u_profile,ts_v_profile,ts_gph_profile,ts_th_profile,ts_p_profile,ts_w_profile,ts_tke_profile
+package   tseries_add_solar     process_time_series==2                 -             state:ts_hour,ts_u,ts_v,ts_q,ts_t,ts_psfc,ts_glw,ts_gsw,ts_hfx,ts_qfx,ts_lh,ts_tsk,ts_tslb,ts_clw,ts_rainc,ts_rainnc,ts_ust,ts_u4,ts_v4,ts_u_profile,ts_v_profile,ts_gph_profile,ts_th_profile,ts_cldfrac2d,ts_wvp,ts_lwp,ts_iwp,ts_swp,ts_lwp_tot,ts_iwp_tot,ts_swp_tot,ts_re_qc,ts_re_qi,ts_re_qs,ts_re_qc_tot,ts_re_qi_tot,ts_re_qs_tot,ts_tau_qc,ts_tau_qi,ts_tau_qs,ts_tau_qc_tot,ts_tau_qi_tot,ts_tau_qs_tot,ts_cbaseht,ts_ctopht,ts_cbaseht_tot,ts_ctopht_tot,ts_clrnidx,ts_p_profile,ts_w_profile,ts_swdown,ts_swddni,ts_swddif,ts_swdownc,ts_swddnic,ts_swdown2,ts_swddni2,ts_swddif2,ts_swdownc2,ts_swddnic2
 
 # WRF-HAILCAST
 state    real   HAILCAST_DHAIL1   ij     misc        1         -      r          "HAILCAST_DHAIL1"     "WRF-HAILCAST Hail Diameter, 1st rank order"     "mm"

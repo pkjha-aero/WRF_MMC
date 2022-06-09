@@ -323,7 +323,7 @@ module_first_rk_step_part2.o : \
 		../share/module_bc.o \
 		../frame/module_comm_dm.o \
 		../phys/module_fddaobs_driver.o \
-		../phys/module_fddaobs_driver.o
+		../phys/module_wind_param_driver.o
 
 module_after_all_rk_steps.o : \
                 ../frame/module_state_description.o \

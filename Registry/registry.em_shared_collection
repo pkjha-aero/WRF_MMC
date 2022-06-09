@@ -34,3 +34,4 @@ include registry.les_cpm
 include registry.slices
 include registry.column_out
 include registry.tsout
+include registry.windturb

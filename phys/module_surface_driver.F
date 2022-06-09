@@ -39,7 +39,7 @@ CONTAINS
      &          ,th10,th2,thz0,th_phy,tmn,tshltr,tsk,tslb             &
      &          ,tyr,tyra,tdly,tlag,lagday,nyear,nday,tmn_update,yr   &
      &          ,t_phy,u10,udrunoff,ust,uz0                           &
-     &          ,u_frame,u_phy,v10,vegfra,u10e,v10e,uoce,voce         &
+     &          ,u_frame,u_phy,v10,vegfra,u10e,v10e,u4,v4,uoce,voce   & 
      &          ,vz0,v_frame,v_phy,warm_rain,wspd,xice,xland,z,znt    &
      &          ,max_edom,cplmask                                     &
 #if (HWRF==1)
@@ -866,6 +866,8 @@ e    &           ,htmx,croplive,gdd1020,gdd820,gdd020,grainc,grainc_storage  &
    REAL, DIMENSION( ims:ime, jms:jme ), INTENT(OUT)::   V10
    REAL, DIMENSION( ims:ime, jms:jme ), INTENT(OUT)::   U10E
    REAL, DIMENSION( ims:ime, jms:jme ), INTENT(OUT)::   V10E
+   REAL, DIMENSION( ims:ime, jms:jme ), INTENT(OUT)::   U4
+   REAL, DIMENSION( ims:ime, jms:jme ), INTENT(OUT)::   V4
    REAL, DIMENSION( ims:ime, jms:jme ), INTENT(OUT)::   UOCE
    REAL, DIMENSION( ims:ime, jms:jme ), INTENT(OUT)::   VOCE
    REAL, DIMENSION( ims:ime, jms:jme ), INTENT(OUT)::   PSFC
@@ -2207,7 +2209,7 @@ e    &           ,htmx,croplive,gdd1020,gdd820,gdd020,grainc,grainc_storage  &
                  p_phy,dz8w,cp,g,rcp,r_d,xlv,psfc,chs,chs2,cqs2,cpm, &
                  znt,ust,pblh,mavail,zol,mol,regime,psim,psih,fm,fhh, &
                  xland,hfx,qfx,lh,tsk,flhc,flqc,qgh,qsfc,rmol,       &
-                 u10,v10,th2,t2,q2,                                  &
+                 u10,v10,u4,v4,th2,t2,q2,                            & 
                  gz1oz0,wspd,br,isfflx,dx,                           &
                  svp1,svp2,svp3,svpt0,ep_1,ep_2,karman,eomeg,stbolt, &
                  P1000mb,                                            &
@@ -2226,7 +2228,7 @@ e    &           ,htmx,croplive,gdd1020,gdd820,gdd020,grainc,grainc_storage  &
                p_phy,dz8w,cp,g,rcp,r_d,xlv,psfc,chs,chs2,cqs2,cpm, &
                znt,ust,pblh,mavail,zol,mol,regime,psim,psih,fm,fhh, &
                xland,hfx,qfx,lh,tsk,flhc,flqc,qgh,qsfc,rmol,       &
-               u10,v10,th2,t2,q2,                                  &
+               u10,v10,u4,v4,th2,t2,q2,                            & !PSH
                gz1oz0,wspd,br,isfflx,dx,                           &
                svp1,svp2,svp3,svpt0,ep_1,ep_2,karman,eomeg,stbolt, &
                P1000mb,                                            &
@@ -5937,7 +5939,7 @@ e    &           ,htmx,croplive,gdd1020,gdd820,gdd020,grainc,grainc_storage  &
                      ZNT,UST,PBLH,MAVAIL,ZOL,MOL,REGIME,PSIM,PSIH, &
                      FM,FH,                                        &
                      XLAND,HFX,QFX,LH,TSK,FLHC,FLQC,QGH,QSFC,RMOL, &
-                     U10,V10,TH2,T2,Q2,                            &
+                     U10,V10,U4,V4,TH2,T2,Q2,                      & 
                      GZ1OZ0,WSPD,BR,ISFFLX,DX,                     &
                      SVP1,SVP2,SVP3,SVPT0,EP1,EP2,                 &
                      KARMAN,EOMEG,STBOLT,                          &
@@ -5984,6 +5986,8 @@ e    &           ,htmx,croplive,gdd1020,gdd820,gdd020,grainc,grainc_storage  &
      REAL,     DIMENSION( ims:ime, jms:jme )                    , &
                INTENT(OUT  )               ::                U10, &
                                                              V10, &
+                                                              U4, & 
+                                                              V4, & 
                                                              TH2, &
                                                               T2, &
                                                               Q2, &
@@ -6097,6 +6101,8 @@ e    &           ,htmx,croplive,gdd1020,gdd820,gdd020,grainc,grainc_storage  &
                                                 TSK_HOLD,         & !ssib
                                                 U10_HOLD,         & !ssib
                                                 V10_HOLD,         & !ssib
+                                                U4_HOLD,          & 
+                                                V4_HOLD,          & 
                                                 CD_SEA,           &
                                                 CDA_SEA,          &
                                                 CK_SEA,           &
@@ -6106,7 +6112,9 @@ e    &           ,htmx,croplive,gdd1020,gdd820,gdd020,grainc,grainc_storage  &
                                                 TH2_SEA,          &
                                                 U10_SEA,          &
                                                 USTM_SEA,         &
-                                                V10_SEA
+                                                V10_SEA,          &
+                                                U4_SEA,           & 
+                                                V4_SEA              
 
      REAL,     DIMENSION( ims:ime, jms:jme ) ::                   &
                                                 BR_SEA,           &
@@ -6178,6 +6186,8 @@ e    &           ,htmx,croplive,gdd1020,gdd820,gdd020,grainc,grainc_storage  &
      TSK_HOLD(its:ite,jts:jte)    = TSK(its:ite,jts:jte)
      U10_HOLD(its:ite,jts:jte)    = U10(its:ite,jts:jte) !fds (01/2014)
      V10_HOLD(its:ite,jts:jte)    = V10(its:ite,jts:jte) !fds (01/2014)
+     U4_HOLD(its:ite,jts:jte)     = U4(its:ite,jts:jte) !fds (01/2014)
+     V4_HOLD(its:ite,jts:jte)     = V4(its:ite,jts:jte) !fds (01/2014)
      
 ! INTENT(OUT) from SFCLAY.  Input shouldn't matter, but we'll want to
 ! keep things around for weighting after the second call to SFCLAY.
@@ -6200,7 +6210,7 @@ e    &           ,htmx,croplive,gdd1020,gdd820,gdd020,grainc,grainc_storage  &
                  ZNT,UST,PBLH,MAVAIL,ZOL,MOL,REGIME,PSIM,PSIH, &
                  FM,FH,                                        &
                  XLAND,HFX,QFX,LH,TSK_LOCAL,FLHC,FLQC,QGH,QSFC,RMOL, &
-                 U10,V10,TH2,T2,Q2,                            &
+                 U10,V10,U4,V4,TH2,T2,Q2,                      & 
                  GZ1OZ0,WSPD,BR,ISFFLX,DX,                     &
                  SVP1,SVP2,SVP3,SVPT0,EP1,EP2,                 &
                  KARMAN,EOMEG,STBOLT,                          &
@@ -6293,7 +6303,8 @@ e    &           ,htmx,croplive,gdd1020,gdd820,gdd020,grainc,grainc_storage  &
                  HFX_SEA,QFX_SEA,LH_SEA,                       & ! I/O
                  TSK_SEA,                                      & ! I
                  FLHC_SEA,FLQC_SEA,QGH_SEA,QSFC_sea,RMOL_SEA,  & ! I/O
-                 U10_sea,V10_sea,TH2_sea,T2_sea,Q2_sea,        & ! O
+                 U10_sea,V10_sea,U4_sea,V4_sea,                & 
+                 TH2_sea,T2_sea,Q2_sea,                        & ! O
                  GZ1OZ0_SEA,WSPD_SEA,BR_SEA,                   & ! I/O
                  ISFFLX,DX,                                    &
                  SVP1,SVP2,SVP3,SVPT0,EP1,EP2,                 &
@@ -6350,10 +6361,12 @@ e    &           ,htmx,croplive,gdd1020,gdd820,gdd020,grainc,grainc_storage  &
               t2(i,j)     = ( t2(i,j)     * XICE(i,j) ) + ( (1.0-XICE(i,j)) * t2_sea(i,j)     )
               th2(i,j)    = ( th2(i,j)    * XICE(i,j) ) + ( (1.0-XICE(i,j)) * th2_sea(i,j)    )
               u10(i,j)    = ( u10(i,j)    * XICE(i,j) ) + ( (1.0-XICE(i,j)) * u10_sea(i,j)    )
+              u4(i,j)    = ( u4(i,j)    * XICE(i,j) ) + ( (1.0-XICE(i,j)) * u4_sea(i,j)    )
               IF ( PRESENT ( USTM ) ) THEN
                  USTM(i,j)    = ( USTM(i,j)    * XICE(i,j) ) + ( (1.0-XICE(i,j)) * USTM_sea(i,j)    )
               ENDIF
               v10(i,j)    = ( v10(i,j)    * XICE(i,j) ) + ( (1.0-XICE(i,j)) * v10_sea(i,j)    )
+              v4(i,j)    = ( v4(i,j)    * XICE(i,j) ) + ( (1.0-XICE(i,j)) * v4_sea(i,j)    )
            ENDIF
         END DO
      END DO

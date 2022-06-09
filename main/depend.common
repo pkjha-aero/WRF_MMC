@@ -792,6 +792,21 @@ module_diagnostics_driver.o: \
 		../frame/module_driver_constants.o 	\
 		../share/module_model_constants.o
 
+module_wind_param_driver.o: \
+                ../frame/module_domain.o \
+                ../frame/module_configure.o \
+                ../frame/module_tiles.o \
+                ../frame/module_dm.o \
+                ../frame/module_machine.o \
+                ../frame/module_state_description.o \
+                ../share/module_bc.o \
+                module_gen_act_disk.o
+
+module_gen_act_disk.o: \
+                ../share/module_llxy.o \
+		module_gad_psu15.o \
+		module_gad_nrel5.o \
+
 module_diag_misc.o: \
 		../frame/module_dm.o
 
@@ -951,7 +966,6 @@ module_mp_gsfcgce_4ice_nuwrf.o : ../frame/module_wrf_error.o \
                             module_gocart_coupling.o \
                             module_checkerror.o \
                             module_mp_radar.o
-
 
 module_sf_spec_ideal_tsk.o :\
 		../frame/module_dm.o 
