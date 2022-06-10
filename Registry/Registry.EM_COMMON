@@ -1289,6 +1289,8 @@ rconfig  integer   pbl3d_in_iter        namelist,dynamics    max_domains      1 
 rconfig  real      pbl3d_tol_abs        namelist,dynamics    max_domains      1.e-8  -     "pbl3d_tol_abs"        "PBL3D absolute tolerance for iterative method" ""
 rconfig  real      pbl3d_tol_rel        namelist,dynamics    max_domains      1.e-8  -     "pbl3d_tol_rel"        "PBL3D relative tolerance for iterative method" ""
 
+rconfig  integer   pbl3d_used           derived                    1          0      -     "pbl3d_used"           "turn on if any variation of PBL3D is used"
+
 #FogDES variables
 state   real   fgdp             ij     misc        1         -      -        "fgdp"                "Accumulated fog deposition"    "mm"
 state   real   dfgdp            ij     misc        1         -      -        "dfgdp"               "Fog deposition during timestep"    "mm"
@@ -3259,6 +3261,8 @@ package   mynn_3Doutput  bl_mynn_output==1           -             state:edmf_a,
 package   pbl_cloud      icloud_bl==1                -             state:cldfra_bl,qc_bl,qi_bl
 
 package   sms_3dtke      km_opt==5                   -             state:gamu,gamv,nlflux,dlk,l_diss,elmin,xkmv_meso
+
+package   any_pbl3d_used pbl3d_used==1               -             state:thetav,q_sq,q_sq_shear,q_sq_buoyancy,q_sq_dissip,q_sq_vdiff,q_sq_hdiff,u_tmp,v_tmp,w_tmp,th_tmp,qv_tmp,rho_tmp,q_sq_tmp,l_master,l_master_at_mass,l_boulac,turb_flux_u2,turb_flux_v2,turb_flux_w2,turb_flux_uv,turb_flux_uw,turb_flux_vw,turb_flux_utheta,turb_flux_vtheta,turb_flux_wtheta,turb_flux_wtheta_v,turb_flux_uqv,turb_flux_vqv,turb_flux_wqv,turb_flux_u2_mass,turb_flux_v2_mass,turb_flux_w2_mass,turb_flux_uv_mass,turb_flux_uw_mass,turb_flux_vw_mass,turb_flux_wtheta_v_mass
 
 # dfi
 package   mynnpblscheme2_dfi bl_pbl_physics_dfi==5   -             dfi_scalar:dfi_qke_adv

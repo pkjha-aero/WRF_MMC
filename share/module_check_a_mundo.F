@@ -1691,6 +1691,21 @@
       END IF
 
 !-----------------------------------------------------------------------
+!  We need to know if any of the 3D PBL options are active. This
+!  allows the model to allocate space.
+!-----------------------------------------------------------------------
+
+      model_config_rec%pbl3d_used = 0
+      DO i = 1, model_config_rec % max_dom
+         IF ( .NOT. model_config_rec % grid_allowed(i) ) CYCLE
+         IF ( model_config_rec%pbl3d_opt(i) .EQ. -1 .OR. &
+              model_config_rec%pbl3d_opt(i) .EQ.  1 .OR. &
+              model_config_rec%pbl3d_opt(i) .EQ.  2      ) THEN
+            model_config_rec%pbl3d_used = 1
+         END IF
+      ENDDO
+
+!-----------------------------------------------------------------------
 !  We need to know if any of the cumulus schemes are active. This
 !  allows the model to allocate space.
 !-----------------------------------------------------------------------
