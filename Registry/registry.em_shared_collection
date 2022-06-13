@@ -35,3 +35,4 @@ include registry.slices
 include registry.column_out
 include registry.tsout
 include registry.windturb
+include registry.add_synth_turb_mmc

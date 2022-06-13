@@ -309,6 +309,7 @@ module_first_rk_step_part2.o : \
 		module_sfs_driver.o \
                 module_les_cpm.o    \
 		module_big_step_utilities_em.o \
+                module_add_synthetic_turb.o \
 		../frame/module_domain.o \
 		../frame/module_state_description.o \
 		../frame/module_driver_constants.o \
@@ -344,6 +345,8 @@ module_column_out.o: \
 
 module_horizontal_slices.o: \
                 ../share/module_model_constants.o
+module_add_synthetic_turb.o: \
+                ../frame/module_dm.o
 
 #		../chem/module_chem_utilities.o \
 # 		../chem/module_input_chem_data.o

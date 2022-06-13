@@ -15,6 +15,9 @@ dimspec    k       2     standard_domain                   z     bottom_top
 dimspec    ntrb    2     namelist=n_turbines               z     nturbines
 dimspec    ntmetrb 2     namelist=n_tmeturb                z     ntmeturb
 dimspec    nslices 2     namelist=num_slices               z     num_slices
+dimspec    dXYn   1     namelist=nxyCnfg                    x     st_ed_hor
+dimspec    dTn   2     namelist=ntCnfg                     z     time_cnt
+dimspec    dZn    2     namelist=nzCnfg                     z     z_points
 endif
 
 ifdef DA_CORE=1

@@ -32,6 +32,7 @@ MODULES =                 		\
         module_column_out.o             \
         module_horizontal_slices.o      \
         module_cellpert.o                  \
+        module_add_synthetic_turb.o     \
 	$(CASE_MODULE)
 
 # possible CASE_MODULE settings
