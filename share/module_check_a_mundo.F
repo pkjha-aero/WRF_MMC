@@ -372,6 +372,34 @@
       ENDDO
 
 !-----------------------------------------------------------------------
+! Check that PBL scheme is turned off if 3D PBL is active
+!-----------------------------------------------------------------------
+
+      DO i = 1, model_config_rec % max_dom
+         IF ( ( model_config_rec % bl_pbl_physics(i) .NE. 0 .AND. &
+              ( model_config_rec % pbl3d_opt(i)      .NE. 0       ) ) ) THEN
+            wrf_err_message = '--- ERROR: Both bl_pbl_physics and pbl3d_opt are turned on'
+            CALL wrf_message ( wrf_err_message )
+            wrf_err_message = '--- ERROR: Set bl_pbl_physics=0 to use pbl3d_opt'
+            CALL wrf_debug ( 0, TRIM( wrf_err_message ) )
+            count_fatal_error = count_fatal_error + 1
+         END IF
+      ENDDO
+
+!-----------------------------------------------------------------------
+! Check that original WRF coordinate system is selected if 3D PBL is active
+!-----------------------------------------------------------------------
+
+      DO i = 1, model_config_rec % max_dom
+         IF ( ( model_config_rec % hybrid_opt    .NE. 0 .AND. &
+              ( model_config_rec % pbl3d_opt(i)  .NE. 0       ) ) ) THEN
+            wrf_err_message = '--- ERROR: Set hybrid_opt=0 to use pbl3d_opt'
+            CALL wrf_debug ( 0, TRIM( wrf_err_message ) )
+            count_fatal_error = count_fatal_error + 1
+         END IF
+      ENDDO
+
+!-----------------------------------------------------------------------
 ! Check  MAD-WRF configuration
 !-----------------------------------------------------------------------
       DO i = 1, model_config_rec % max_dom
@@ -1661,6 +1689,21 @@
          wrf_err_message = 'Need MYNN PBL for icloud_bl = 1, resetting to 0'
          CALL wrf_debug ( 1, wrf_err_message )
       END IF
+
+!-----------------------------------------------------------------------
+!  We need to know if any of the 3D PBL options are active. This
+!  allows the model to allocate space.
+!-----------------------------------------------------------------------
+
+      model_config_rec%pbl3d_used = 0
+      DO i = 1, model_config_rec % max_dom
+         IF ( .NOT. model_config_rec % grid_allowed(i) ) CYCLE
+         IF ( model_config_rec%pbl3d_opt(i) .EQ. -1 .OR. &
+              model_config_rec%pbl3d_opt(i) .EQ.  1 .OR. &
+              model_config_rec%pbl3d_opt(i) .EQ.  2      ) THEN
+            model_config_rec%pbl3d_used = 1
+         END IF
+      ENDDO
 
 !-----------------------------------------------------------------------
 !  We need to know if any of the cumulus schemes are active. This

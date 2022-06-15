@@ -506,7 +506,9 @@ SUBROUTINE calc_ts( grid )
             
 
             IF (( grid%tslist_turbulent_output == 1 ) .OR. ( grid%tslist_turbulent_output == 2 )) THEN
-               IF ( (grid%km_opt == 1) .OR. (grid%km_opt == 4) ) THEN
+               IF (ABS(grid%pbl3d_opt) > 0) THEN
+                  grid%ts_tke_profile(n,i,k)   = grid%q_sq_prog_2(ix,k,iy)
+               ELSE IF ( (grid%km_opt == 1) .OR. (grid%km_opt == 4) ) THEN
                   IF ((grid%bl_pbl_physics == 5) .OR. (grid%bl_pbl_physics == 6)) THEN
                      grid%ts_tke_profile(n,i,k)   = grid%qke(ix,k,iy)
                   ELSE
@@ -518,7 +520,20 @@ SUBROUTINE calc_ts( grid )
             END IF
 
             IF ( grid%tslist_turbulent_output == 2 ) THEN
-               IF ( (grid%km_opt /= 1) .AND. (grid%km_opt /= 4) ) THEN
+               IF (ABS(grid%pbl3d_opt) > 0) THEN
+                  grid%ts_m11_profile(n,i,k)   = (grid%turb_flux_u2(ix,k,iy) + grid%turb_flux_u2(ix,k+1,iy)) / 2.
+                  grid%ts_m12_profile(n,i,k)   = (grid%turb_flux_uv(ix,k,iy) + grid%turb_flux_uv(ix,k+1,iy)) / 2.
+                  grid%ts_m13_profile(n,i,k)   = (grid%turb_flux_uw(ix,k,iy) + grid%turb_flux_uw(ix,k+1,iy)) / 2.
+                  grid%ts_m22_profile(n,i,k)   = (grid%turb_flux_v2(ix,k,iy) + grid%turb_flux_v2(ix,k+1,iy)) / 2.
+                  grid%ts_m33_profile(n,i,k)   = (grid%turb_flux_w2(ix,k,iy) + grid%turb_flux_w2(ix,k+1,iy)) / 2.
+                  grid%ts_m23_profile(n,i,k)   = (grid%turb_flux_vw(ix,k,iy) + grid%turb_flux_vw(ix,k+1,iy)) / 2.
+                  grid%ts_mh1_profile(n,i,k)   = 1.e6*(grid%turb_flux_utheta(ix,k,iy) + grid%turb_flux_utheta(ix,k+1,iy)) / 2.
+                  grid%ts_mh2_profile(n,i,k)   = 1.e6*(grid%turb_flux_vtheta(ix,k,iy) + grid%turb_flux_vtheta(ix,k+1,iy)) / 2.
+                  grid%ts_mh3_profile(n,i,k)   = 1.e6*(grid%turb_flux_wtheta(ix,k,iy) + grid%turb_flux_wtheta(ix,k+1,iy)) / 2.
+                  grid%ts_mq1_profile(n,i,k)   = 1.e6*(grid%turb_flux_uqv(ix,k,iy) + grid%turb_flux_uqv(ix,k+1,iy)) / 2.
+                  grid%ts_mq2_profile(n,i,k)   = 1.e6*(grid%turb_flux_vqv(ix,k,iy) + grid%turb_flux_vqv(ix,k+1,iy)) / 2.
+                  grid%ts_mq3_profile(n,i,k)   = 1.e6*(grid%turb_flux_wqv(ix,k,iy) + grid%turb_flux_wqv(ix,k+1,iy)) / 2.
+               ELSE IF ( (grid%km_opt /= 1) .AND. (grid%km_opt /= 4) ) THEN
                   grid%ts_m11_profile(n,i,k)   = grid%nba_mij(ix,k,iy,P_m11)
                   grid%ts_m12_profile(n,i,k)   = grid%nba_mij(ix,k,iy,P_m12)
                   grid%ts_m13_profile(n,i,k)   = grid%nba_mij(ix,k,iy,P_m13)
@@ -804,7 +819,7 @@ SUBROUTINE write_ts( grid )
    END IF
 
    IF ( grid%tslist_turbulent_output == 2 ) THEN
-       IF ( (grid%km_opt /= 1) .AND. (grid%km_opt /= 4) ) THEN
+       IF ( ((grid%km_opt /= 1) .AND. (grid%km_opt /= 4)) .OR. (ABS(grid%pbl3d_opt) > 0) ) THEN
            ! - - - - - - SGS LES - - - - - 
            DO k=1,grid%max_ts_level
            ts_buf(:,:) = grid%ts_m11_profile(:,:,k)
@@ -1312,7 +1327,7 @@ SUBROUTINE write_ts( grid )
          END IF
 
          IF ( grid%tslist_turbulent_output == 2 ) THEN
-             IF ( (grid%km_opt /= 1) .AND. (grid%km_opt /= 4) ) THEN
+             IF ( ((grid%km_opt /= 1) .AND. (grid%km_opt /= 4)) .OR. (ABS(grid%pbl3d_opt) > 0) ) THEN
                !Write m11 profile to separate file
                iunit = get_unused_unit()
                   IF ( iunit <= 0 ) THEN

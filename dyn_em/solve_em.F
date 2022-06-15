@@ -46,7 +46,11 @@ SUBROUTINE solve_em ( grid , config_flags  &
                  ,period_bdy_em_tracer_sub,period_em_da_sub,period_em_hydro_uv_sub         &
                  ,period_em_f_sub,period_em_g_sub                                          &
                  ,halo_em_f_1_sub,halo_em_init_4_sub,halo_em_thetam_sub,period_em_thetam_sub &
-                 ,halo_em_d_pv_sub
+                 ,halo_em_d_pv_sub                                                         &
+                 ,halo_em_pbl3d_3_sub,halo_em_pbl3d_5_sub,halo_em_pbl3d_7_sub              &
+                 ,halo_em_pbl3d_advect_3_sub, halo_em_pbl3d_advect_5_sub                   &
+                 ,halo_em_pbl3d_old_e_5_sub, halo_em_pbl3d_old_e_7_sub                     &
+                 ,period_bdy_em_pbl3d_old_sub,period_bdy_em_pbl3d_sub
 #endif
    USE module_utility
 ! Mediation layer modules
@@ -134,6 +138,9 @@ SUBROUTINE solve_em ( grid , config_flags  &
                                                                                    
    ! Whether advection should produce decoupled horizontal and vertical advective tendency outputs
    LOGICAL                        :: tenddec
+
+   ! Flag for whether prognostic q_sq for pbl3d is advected
+   LOGICAL                        :: doing_q_sq
    
    ! Flag for producing diagnostic fields (e.g., radar reflectivity)
    LOGICAL                        :: diag_flag
@@ -170,6 +177,7 @@ SUBROUTINE solve_em ( grid , config_flags  &
    INTEGER :: idex, jdex
    REAL    :: max_msft
    REAL    :: spacing
+   REAL, PARAMETER :: q_sq_min = 1.0E-5  ! TWJ
 
    INTEGER :: ii, jj !kk is above after l,kte
    REAL    :: dclat
@@ -765,6 +773,7 @@ BENCH_START(calc_p_rho_tim)
                              , rw_tendf, t_tendf                &
                              , ph_tendf, mu_tendf               &
                              , tke_tend                         &
+                             , q_sq_prog_tend                   &
                              , config_flags%use_adaptive_time_step &
                              , curr_secs                        &
                              , psim , psih , gz1oz0             &
@@ -802,6 +811,7 @@ BENCH_START(calc_p_rho_tim)
                              , rw_tendf, t_tendf                &
                              , ph_tendf, mu_tendf               &
                              , tke_tend                         &
+                             , q_sq_prog_tend                   &
                              , adapt_step_flag , curr_secs      &
                              , psim , psih , gz1oz0             &
                              , chklowq                          &
@@ -826,6 +836,8 @@ BENCH_START(rk_tend_tim)
      !$OMP PARALLEL DO   &
      !$OMP PRIVATE ( ij )
      DO ij = 1 , grid%num_tiles
+
+       doing_q_sq = .false.
 
        CALL wrf_debug ( 200 , ' call rk_tendency' )
        CALL rk_tendency ( config_flags, rk_step                                                                &
@@ -853,6 +865,7 @@ BENCH_START(rk_tend_tim)
                          ,grid%dampcoef,grid%zdamp,config_flags%damp_opt,config_flags%rad_nudge                &
                          ,grid%cf1, grid%cf2, grid%cf3, grid%cfn, grid%cfn1, num_3d_m                          &
                          ,config_flags%non_hydrostatic, config_flags%top_lid                                   &
+                         ,doing_q_sq                                                                           &
                          ,grid%u_frame, grid%v_frame                                                           &
                          ,ids, ide, jds, jde, kds, kde                                                         &
                          ,ims, ime, jms, jme, kms, kme                                                         &
@@ -2268,6 +2281,63 @@ BENCH_END(small_step_finish_tim)
 
        END IF  ! end if for tke_adv_opt
 
+!!!!!!!!!!!!!!!! PBL3D - TWJ
+
+       IF ((config_flags%pbl3d_adv_opt /= ORIGINAL .and. config_flags%pbl3d_adv_opt /= WENO_SCALAR) .and. (rk_step == rk_order) &
+           .and. (config_flags%bl_pbl_physics .eq. 0) .and. (abs(config_flags%pbl3d_opt) .gt. 0) .and. (config_flags%pbl3d_prog .gt. 0) ) THEN
+
+         !$OMP PARALLEL DO   &
+         !$OMP PRIVATE ( ij )
+         DO ij = 1 , grid%num_tiles
+           CALL wrf_debug ( 200 , ' call rk_update_scalar_pd' )
+           CALL rk_update_scalar_pd( 1, 1,                                    &
+                                     grid%q_sq_prog_1,                        &
+                                     q_sq_prog_tend(ims,kms,jms),             &
+                                     grid%c1h, grid%c2h,                      &
+                                     grid%mu_1, grid%mu_1, grid%mub,          &
+                                     rk_step, dt_rk, grid%spec_zone,          &
+                                     config_flags,                            &
+                                     ids, ide, jds, jde, kds, kde,            &
+                                     ims, ime, jms, jme, kms, kme,            &
+                                     grid%i_start(ij), grid%i_end(ij),        &
+                                     grid%j_start(ij), grid%j_end(ij),        &
+                                     k_start    , k_end                       )
+         ENDDO
+         !$OMP END PARALLEL DO
+
+!---------------------- positive definite bc call
+#ifdef DM_PARALLEL
+         IF (config_flags%pbl3d_adv_opt /= ORIGINAL .and. config_flags%pbl3d_adv_opt /= WENO_SCALAR) THEN
+           IF      ( config_flags%h_pbl3d_adv_order <= 4 ) THEN
+#     include "HALO_EM_PBL3D_OLD_E_5.inc"
+           ELSE IF ( config_flags%h_pbl3d_adv_order <= 6 ) THEN
+#     include "HALO_EM_PBL3D_OLD_E_7.inc"
+           ELSE
+             WRITE(wrf_err_message,*)'solve_em: invalid h_pbl3d_adv_order = ',config_flags%h_pbl3d_adv_order
+             CALL wrf_error_fatal(TRIM(wrf_err_message))
+           ENDIF
+         ENDIF
+#endif
+
+#ifdef DM_PARALLEL
+#  include "PERIOD_BDY_EM_PBL3D_OLD.inc"
+#endif
+
+         !$OMP PARALLEL DO   &
+         !$OMP PRIVATE ( ij )
+         DO ij = 1 , grid%num_tiles
+           CALL set_physical_bc3d(  grid%q_sq_prog_1, 'p', config_flags,    &
+                                    ids, ide, jds, jde, kds, kde,      &
+                                    ims, ime, jms, jme, kms, kme,      &
+                                    ips, ipe, jps, jpe, kps, kpe,      &
+                                    grid%i_start(ij), grid%i_end(ij),  &
+                                    grid%j_start(ij), grid%j_end(ij),  &
+                                    k_start    , k_end                )
+         END DO
+         !$OMP END PARALLEL DO
+
+       END IF  ! end if for pbl3d_adv_opt
+
 #ifdef DM_PARALLEL
 !
 !  Stencils for patch communications  (WCS, 29 June 2001)
@@ -2319,10 +2389,11 @@ BENCH_END(small_step_finish_tim)
 
                CALL wrf_debug ( 200 , ' call rk_scalar_tend' )
                tenddec = .false.
+               doing_q_sq = .false.
 
 BENCH_START(rk_scalar_tend_tim)
                CALL rk_scalar_tend (  im, im, config_flags, tenddec,         & 
-                           rk_step, dt_rk,                                   &
+                           doing_q_sq, rk_step, dt_rk,                       &
                            grid%ru_m, grid%rv_m, grid%ww_m, wwE, wwI,        &
                            grid%u_1, grid%v_1,                               &  
                            grid%muts, grid%mub, grid%mu_1,                   &
@@ -2490,8 +2561,9 @@ BENCH_START(tke_adv_tim)
 
            CALL wrf_debug ( 200 , ' call rk_scalar_tend for tke' )
            tenddec = .false.
+           doing_q_sq = .false.
            CALL rk_scalar_tend ( 1, 1, config_flags, tenddec,                      & 
-                            rk_step, dt_rk,                                        &
+                            doing_q_sq, rk_step, dt_rk,                            &
                             grid%ru_m, grid%rv_m, grid%ww_m, wwE, wwI,             &
                             grid%u_1, grid%v_1,                                    &  
                             grid%muts, grid%mub, grid%mu_1,                        &
@@ -2545,12 +2617,12 @@ BENCH_START(tke_adv_tim)
 
 ! bound the tke (greater than 0, less than tke_upper_bound)
 
-           CALL bound_tke( grid%tke_2, grid%tke_upper_bound,    &
-                           ids, ide, jds, jde, kds, kde,        &
-                           ims, ime, jms, jme, kms, kme,        &
-                           grid%i_start(ij), grid%i_end(ij),    &
-                           grid%j_start(ij), grid%j_end(ij),    &
-                           k_start    , k_end                  )
+           CALL bound_tke( grid%tke_2, grid%tke_upper_bound, 0.0,    &
+                           ids, ide, jds, jde, kds, kde,             &
+                           ims, ime, jms, jme, kms, kme,             &
+                           grid%i_start(ij), grid%i_end(ij),         &
+                           grid%j_start(ij), grid%j_end(ij),         &
+                           k_start    , k_end                       )
 
            IF( config_flags%specified .or. config_flags%nested ) THEN
               CALL flow_dep_bdy (  grid%tke_2,                     &
@@ -2569,6 +2641,108 @@ BENCH_START(tke_adv_tim)
        ENDIF TKE_advance
 BENCH_END(tke_adv_tim)
 
+!!!!!!!!!!!!!!!! PBL3D - TWJ
+
+BENCH_START(q_sq_prog_adv_tim)
+       Q_SQ_PROG_advance: IF ( (config_flags%bl_pbl_physics .eq. 0) .and. (abs(config_flags%pbl3d_opt) .gt. 0) .and. (config_flags%pbl3d_prog .gt. 0) ) then
+#ifdef DM_PARALLEL
+         IF ( config_flags%h_pbl3d_adv_order <= 4 ) THEN
+#       include "HALO_EM_PBL3D_ADVECT_3.inc"
+         ELSE IF ( config_flags%h_pbl3d_adv_order <= 6 ) THEN
+#       include "HALO_EM_PBL3D_ADVECT_5.inc"
+         ELSE
+          WRITE(wrf_err_message,*)'solve_em: invalid h_pbl3d_adv_order = ',config_flags%h_pbl3d_adv_order
+          CALL wrf_error_fatal(TRIM(wrf_err_message))
+         ENDIF
+#endif
+
+         !$OMP PARALLEL DO   &
+         !$OMP PRIVATE ( ij, tenddec )
+         q_sq_prog_tile_loop_1: DO ij = 1 , grid%num_tiles
+
+           CALL wrf_debug ( 200 , ' call rk_scalar_tend for q_sq_prog' )
+           tenddec = .false.
+           doing_q_sq = .true.
+           CALL rk_scalar_tend ( 1, 1, config_flags, tenddec,                      &
+                            doing_q_sq, rk_step, dt_rk,                            &
+                            grid%ru_m, grid%rv_m, grid%ww_m, wwE, wwI,             &
+                            grid%u_1, grid%v_1,                                    &
+                            grid%muts, grid%mub, grid%mu_1,                        &
+                            grid%c1h, grid%c2h,  grid%c1f, grid%c2f,               &
+                            grid%alt,                                              &
+                            grid%q_sq_prog_1,                                      &
+                            grid%q_sq_prog_2,                                      &
+                            q_sq_prog_tend(ims,kms,jms),                           &
+                            advect_tend,h_tendency,z_tendency,grid%rqvften,        &
+                            grid%qv_base, .false., grid%fnm, grid%fnp,             &
+                            grid%msfux,grid%msfuy, grid%msfvx, grid%msfvx_inv,     &
+                            grid%msfvy, grid%msftx,grid%msfty,                     &
+                            grid%rdx, grid%rdy, grid%rdn, grid%rdnw, grid%khdif,   &
+                            grid%kvdif, grid%xkhh,                                 &
+                            grid%diff_6th_opt, grid%diff_6th_factor,               &
+                            config_flags%pbl3d_adv_opt,                            &
+                            grid%phb, grid%ph_2,                                   &
+                            config_flags%pbl3d_mix2_off,                           &
+                            config_flags%pbl3d_mix6_off,                           &
+                            ids, ide, jds, jde, kds, kde,     &
+                            ims, ime, jms, jme, kms, kme,     &
+                            grid%i_start(ij), grid%i_end(ij), &
+                            grid%j_start(ij), grid%j_end(ij), &
+                            k_start    , k_end               )
+
+         ENDDO q_sq_prog_tile_loop_1
+         !$OMP END PARALLEL DO
+
+         !$OMP PARALLEL DO   &
+         !$OMP PRIVATE ( ij, tenddec )
+         q_sq_prog_tile_loop_2: DO ij = 1 , grid%num_tiles
+
+           CALL wrf_debug ( 200 , ' call rk_update_scalar' )
+           tenddec = .false.
+           CALL rk_update_scalar( scs=1,  sce=1,                                          &
+                                  scalar_1=grid%q_sq_prog_1,                              &
+                                  scalar_2=grid%q_sq_prog_2,                              &
+                                  sc_tend=q_sq_prog_tend(ims,kms,jms),                    &
+                                  advect_tend=advect_tend,                                &
+                                  h_tendency=h_tendency, z_tendency=z_tendency,           &
+                                  msftx=grid%msftx,msfty=grid%msfty,                      &
+                                  c1=grid%c1h, c2=grid%c2h,                               &
+                                  mu_old=grid%mu_1, mu_new=grid%mu_2, mu_base=grid%mub,   &
+                                  rk_step=rk_step, dt=dt_rk, spec_zone=grid%spec_zone,    &
+                                  config_flags=config_flags, tenddec=tenddec,             &
+                                  ids=ids, ide=ide, jds=jds, jde=jde, kds=kds, kde=kde,   &
+                                  ims=ims, ime=ime, jms=jms, jme=jme, kms=kms, kme=kme,   &
+                                  its=grid%i_start(ij), ite=grid%i_end(ij),               &
+                                  jts=grid%j_start(ij), jte=grid%j_end(ij),               &
+                                  kts=k_start    , kte=k_end                              )
+
+! bound the tke (greater than 1.0E-5, less than tke_upper_bound)
+
+           CALL bound_tke( grid%q_sq_prog_2, grid%tke_upper_bound, q_sq_min,   &
+                           ids, ide, jds, jde, kds, kde,        &
+                           ims, ime, jms, jme, kms, kme,        &
+                           grid%i_start(ij), grid%i_end(ij),    &
+                           grid%j_start(ij), grid%j_end(ij),    &
+                           k_start    , k_end                  )
+
+           IF( config_flags%specified .or. config_flags%nested ) THEN
+              CALL flow_dep_bdy_q_sq (  grid%q_sq_prog_2,                     &
+                                        grid%ru_m, grid%rv_m, config_flags,               &
+                                        grid%spec_zone,                              &
+                                        q_sq_min,                   &
+                                        ids,ide, jds,jde, kds,kde,  & ! domain dims
+                                        ims,ime, jms,jme, kms,kme,  & ! memory dims
+                                        ips,ipe, jps,jpe, kps,kpe,  & ! patch  dims
+                                        grid%i_start(ij), grid%i_end(ij),       &
+                                        grid%j_start(ij), grid%j_end(ij),       &
+                                        k_start, k_end                               )
+           ENDIF
+         ENDDO q_sq_prog_tile_loop_2
+         !$OMP END PARALLEL DO
+
+       ENDIF Q_SQ_PROG_advance
+BENCH_END(q_sq_prog_adv_tim)
+
 #if (WRF_CHEM == 1)
 !  next the chemical species
 BENCH_START(chem_adv_tim)
@@ -2583,8 +2757,9 @@ BENCH_START(chem_adv_tim)
              CALL wrf_debug ( 200 , ' call rk_scalar_tend in chem_tile_loop_1' )
              tenddec = (( config_flags%chemdiag == USECHEMDIAG ) .and. &
                         ( adv_ct_indices(ic) >= PARAM_FIRST_SCALAR ))
+             doing_q_sq = .false.
              CALL rk_scalar_tend ( ic, ic, config_flags, tenddec,                & 
-                              rk_step, dt_rk,                                    &
+                              doing_q_sq, rk_step, dt_rk,                        &
                               grid%ru_m, grid%rv_m, grid%ww_m, wwE, wwI,         &
                               grid%u_1, grid%v_1,                                &  
                               grid%muts, grid%mub, grid%mu_1,                    &
@@ -2745,8 +2920,9 @@ BENCH_START(tracer_adv_tim)
 
              CALL wrf_debug ( 15 , ' call rk_scalar_tend in tracer_tile_loop_1' )
              tenddec = .false.
+             doing_q_sq = .false.
              CALL rk_scalar_tend ( ic, ic, config_flags, tenddec,                & 
-                              rk_step, dt_rk,                                    &
+                              doing_q_sq, rk_step, dt_rk,                        &
                               grid%ru_m, grid%rv_m, grid%ww_m, wwE, wwI,         &
                               grid%u_1, grid%v_1,                                &  
                               grid%muts, grid%mub, grid%mu_1,                    &
@@ -2887,8 +3063,9 @@ BENCH_END(tracer_adv_tim)
 
            CALL wrf_debug ( 200 , ' call rk_scalar_tend' )
            tenddec = .false.
+           doing_q_sq = .false.
            CALL rk_scalar_tend ( is, is, config_flags, tenddec,                   & 
-                                 rk_step, dt_rk,                                  &
+                                 doing_q_sq, rk_step, dt_rk,                      &
                                  grid%ru_m, grid%rv_m, grid%ww_m, wwE, wwI,       &
                                  grid%u_1, grid%v_1,                              &  
                                  grid%muts, grid%mub, grid%mu_1,                  &
@@ -3437,6 +3614,18 @@ BENCH_END(diag_w_tim)
                                    k_start    , k_end                      )
          END IF
 
+         IF ( (config_flags%bl_pbl_physics .eq. 0) .AND. &
+            (abs(config_flags%pbl3d_opt) .gt. 0)   .AND. &
+            (config_flags%pbl3d_prog .gt. 0) )     THEN
+           CALL set_physical_bc3d( grid%q_sq_prog_2 , 'p', config_flags,  &
+                                   ids, ide, jds, jde, kds, kde,            &
+                                   ims, ime, jms, jme, kms, kme,            &
+                                   ips, ipe, jps, jpe, kps, kpe,            &
+                                   grid%i_start(ij), grid%i_end(ij),        &
+                                   grid%j_start(ij), grid%j_end(ij),        &
+                                   k_start    , k_end                      )
+         END IF
+
        END DO tile_bc_loop_1
        !$OMP END PARALLEL DO
 BENCH_END(bc_end_tim)
@@ -3464,6 +3653,25 @@ BENCH_END(bc_end_tim)
 #         include "HALO_EM_TKE_7.inc"
          ELSE
 #         include "HALO_EM_TKE_5.inc"
+         ENDIF
+       ELSE
+         WRITE(wrf_err_message,*)'solve_em: invalid h_sca_adv_order = ',config_flags%h_sca_adv_order
+         CALL wrf_error_fatal(TRIM(wrf_err_message))
+       ENDIF
+
+       IF      ( config_flags%h_mom_adv_order <= 4 ) THEN
+         IF ( (config_flags%pbl3d_adv_opt /= ORIGINAL .and. config_flags%pbl3d_adv_opt /= WENO_SCALAR) .and. (rk_step == rk_order-1) .and. &
+              (config_flags%bl_pbl_physics .eq. 0) .and. (abs(config_flags%pbl3d_opt) .gt. 0) .and. (config_flags%pbl3d_prog .gt. 0) ) THEN
+#         include "HALO_EM_PBL3D_5.inc"
+         ELSE
+#         include "HALO_EM_PBL3D_3.inc"
+         ENDIF
+       ELSE IF ( config_flags%h_mom_adv_order <= 6 ) THEN
+         IF ( (config_flags%pbl3d_adv_opt /= ORIGINAL .and. config_flags%pbl3d_adv_opt /= WENO_SCALAR) .and. (rk_step == rk_order-1) .and. &
+              (config_flags%bl_pbl_physics .eq. 0) .and. (abs(config_flags%pbl3d_opt) .gt. 0) .and. (config_flags%pbl3d_prog .gt. 0) ) THEN
+#         include "HALO_EM_PBL3D_7.inc"
+         ELSE
+#         include "HALO_EM_PBL3D_5.inc"
          ENDIF
        ELSE
          WRITE(wrf_err_message,*)'solve_em: invalid h_sca_adv_order = ',config_flags%h_sca_adv_order
@@ -4652,6 +4860,22 @@ BENCH_START(bc_2d_tim)
                              k_start    , k_end-1                    )
 
      CALL set_physical_bc3d( grid%tke_2 , 'p', config_flags,  &
+                             ids, ide, jds, jde, kds, kde,            &
+                             ims, ime, jms, jme, kms, kme,            &
+                             ips, ipe, jps, jpe, kps, kpe,            &
+                             grid%i_start(ij), grid%i_end(ij),        &
+                             grid%j_start(ij), grid%j_end(ij),        &
+                             k_start    , k_end                      )
+
+     CALL set_physical_bc3d( grid%q_sq_prog_1 , 'p', config_flags,  &
+                             ids, ide, jds, jde, kds, kde,            &
+                             ims, ime, jms, jme, kms, kme,            &
+                             ips, ipe, jps, jpe, kps, kpe,            &
+                             grid%i_start(ij), grid%i_end(ij),        &
+                             grid%j_start(ij), grid%j_end(ij),        &
+                             k_start    , k_end-1                    )
+
+      CALL set_physical_bc3d( grid%q_sq_prog_2 , 'p', config_flags,  &
                              ids, ide, jds, jde, kds, kde,            &
                              ims, ime, jms, jme, kms, kme,            &
                              ips, ipe, jps, jpe, kps, kpe,            &

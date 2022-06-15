@@ -44,6 +44,7 @@
    USE module_diag_pld, ONLY : pld
    USE module_diag_zld, ONLY : zld
    USE module_trad_fields, ONLY : trad_fields
+   USE module_pbl3d, ONLY : Init_pbl3d
 
 !!debug
 !USE module_compute_geop
@@ -1734,6 +1735,12 @@ endif
                          its , ite , jts , jte , kts , kte ,        &
                          its , ite , jts , jte , kts , kte )
 
+   CALL set_physical_bc3d(grid%q_sq_prog_2, 't' , config_flags ,           &
+                         ids , ide , jds , jde , kds , kde ,        &
+                         ims , ime , jms , jme , kms , kme ,        &
+                         its , ite , jts , jte , kts , kte ,        &
+                         its , ite , jts , jte , kts , kte )
+
    IF (num_moist > 0) THEN
 
 ! use of (:,:,:,loop) not efficient on DEC, but (ims,kms,jms,loop) not portable to SGI/Cray
@@ -2165,6 +2172,23 @@ DEALLOCATE(z_at_q)
                ,ITS=its,ITE=ite, JTS=jts,JTE=jte, KTS=kts,KTE=kte   )
    ENDIF
 
+
+     ! Init pbl3d
+   if(config_flags%bl_pbl_physics .eq. 0 .and. ABS(config_flags%pbl3d_opt) .gt. 0) then
+     do ij = 1, grid%num_tiles
+       call Init_pbl3d (config_flags%restart, config_flags%pbl3d_opt, &
+           config_flags%pbl3d_sfc_opt, config_flags%pbl3d_l_opt, config_flags%pbl3d_prog, config_flags%pbl3d_constants, config_flags%pbl3d_nsteps,    &
+           grid%fnm, grid%fnp, grid%dnw, grid%ph_2, grid%phb, &
+           grid%t_2, moist(:,:,:,P_QV), grid%thetav, grid%alt, grid%u_2, grid%v_2, grid%ust, grid%hfx, grid%qfx, &
+           grid%rmol, grid%q_sq, grid%q_sq_prog_2, grid%q_sq_vdiff, grid%q_sq_hdiff, grid%q_sq_shear, grid%q_sq_buoyancy, grid%q_sq_dissip, &
+           ids, ide, jds, jde, kds, kde, ims, ime, jms, jme, kms, kme,  &
+           grid%i_start(ij), grid%i_end(ij), grid%j_start(ij), grid%j_end(ij), kts, kte, grid%l_master, grid%l_master_at_mass, &
+           grid%turb_flux_u2, grid%turb_flux_v2, grid%turb_flux_w2, grid%turb_flux_uv, grid%turb_flux_uw, grid%turb_flux_vw, &
+           grid%turb_flux_utheta_v, grid%turb_flux_vtheta_v, grid%turb_flux_wtheta_v, grid%turb_flux_theta2_v, &
+           grid%turb_flux_utheta, grid%turb_flux_vtheta, grid%turb_flux_wtheta, grid%turb_flux_uqv, grid%turb_flux_vqv, &
+           grid%turb_flux_wqv)
+     end do
+   end if
 
 !  FIRE
 if(config_flags%ifire.eq.2)then

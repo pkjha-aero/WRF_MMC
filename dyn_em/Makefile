@@ -21,6 +21,8 @@ MODULES =                 		\
         module_force_scm.o              \
         module_first_rk_step_part1.o    \
         module_first_rk_step_part2.o    \
+        module_pbl3d.o                  \
+        module_pbl3d_my.o               \
         module_avgflx_em.o              \
 	module_sfs_nba.o		\
         module_les_cpm.o                \
