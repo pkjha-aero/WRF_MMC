@@ -63,7 +63,7 @@ CONTAINS
     USE module_fddaobs_driver, ONLY : fddaobs_driver
     USE module_bc, ONLY : set_physical_bc3d, set_physical_bc2d
     USE module_physics_addtendc, ONLY : update_phy_ten
-
+    USE module_add_synthetic_turb !RKR-MMC
     USE module_sfs_driver !JDM
     USE module_stoch, ONLY : update_stoch_ten, perturb_physics_tend,RAND_PERT_UPDATE
     USE module_pbl3d, ONLY : Init_temp_arrays_for_substep, Update_wrf_tends_temp_state_and_zero_tends, Allocate_temp_tends, Deallocate_temp_tends, &
@@ -154,6 +154,8 @@ CONTAINS
     INTEGER  num_road_layers
     INTEGER  iswater
     INTEGER  rk_step 
+    integer  :: ii !RKR-MMC
+    character (28) :: str1, str2 !RKR-MMC
 
 #if ( WRF_DFI_RADAR == 1 )
     INTEGER  i_start,i_end,j_start,j_end,i,j,k
@@ -388,6 +390,37 @@ BENCH_START(comp_diff_metrics_tim)
          ENDDO
          !$OMP END PARALLEL DO
 BENCH_END(comp_diff_metrics_tim)
+
+!RKR-mmc starts -----------------------------------------------------------
+if(config_flags%use_synthturb .and. config_flags%nested.and.(grid%xtime.ge.0.)) then
+   do ii = 1,config_flags%nfiles_synthturb
+      if(grid%xtime.eq.(config_flags%start_synthturb)+(ii-1)*10.0) then
+        write(str1,'(I4.4)') (ii-1)*10
+        write(str2,'(I4.4)') ii*10
+        grid%fname = "inflowSynthData"//trim(str1)//"-"//trim(str2)//".txt"
+
+       !$OMP PARALLEL DO &
+       !$OMP PRIVATE ( ij )
+
+       do ij = 1, grid%num_tiles
+       call read_uvw_fluctuation(grid%xtime, &
+                          grid%uFluctu,            &
+                          grid%vFluctu,            &
+                          grid%wFluctu,            &
+                          grid%tValu,              &
+                          config_flags%nxyCnfg,    &
+                          config_flags%nzCnfg,     &
+                          config_flags%ntCnfg,     &
+                          config_flags%start_synthturb, &
+                          grid%fname)
+       enddo
+       !$OMP END PARALLEL DO
+
+      exit
+     endif
+   enddo
+endif
+!RKR-mmc  ends ---------------------------------------------------------------
 
 !JDM Perturbations
 
@@ -1017,6 +1050,37 @@ BENCH_START(tke_rhs_tim)
 BENCH_END(tke_rhs_tim)
 
        ENDIF
+
+!RKR-mmc starts here ---------------------------------------------
+if (config_flags%use_synthturb .and. config_flags%nested) then
+           !$OMP PARALLEL DO &
+           !$OMP PRIVATE ( ij )
+           do ij =1, grid%num_tiles
+           call add_synthetic_turb(grid%muu,                        &
+                       grid%muv,                        &
+                       grid%mut,                        &
+                       grid%xtime,                      &
+                       grid%rdz,                        &
+                       ru_tendf,                    &
+                       rv_tendf,                    &
+                       rw_tendf,                    &
+                       grid%uFluctu,                    &
+                       grid%vFluctu,                    &
+                       grid%wFluctu,                    &
+                       grid%tValu,                      &
+                       config_flags%nxyCnfg,            &
+                       config_flags%nzCnfg,             &
+                       config_flags%ntCnfg,             &
+                       config_flags%sides_synthturb,    &
+                       ids, ide, jds, jde, kds, kde,    &
+                       ims, ime, jms, jme, kms, kme,    &
+                         grid%i_start(ij), grid%i_end(ij),            &
+                         grid%j_start(ij), grid%j_end(ij),            &
+                         k_start    , k_end                           )
+           enddo
+           !$OMP END PARALLEL DO
+endif
+!RKR-mmc ends here ---------------------------------------------
 
        IF ( grid%obs_nudge_opt .EQ. 1 .AND. grid%xtime <= grid%fdda_end ) THEN
 # ifdef DM_PARALLEL
