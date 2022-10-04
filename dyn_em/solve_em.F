@@ -5237,7 +5237,8 @@ BENCH_END(bc_2d_tim)
                                grid%zts, grid%t11ts, grid%t22ts,      &
                                grid%t33ts, grid%t12ts, grid%t13ts,    &
                                grid%t23ts, grid%h3ts, grid%usts,      &
-                               grid%z0ts, grid%u_2, grid%v_2,         &
+                               grid%z0ts, grid%powerts,               &
+                               grid%u_2, grid%v_2,                    &   
                                grid%w_2, grid%t_2, grid%p,            &
                                grid%pb, grid%tke_2,                   &
                                grid%ph_2, grid%phb,                   &
@@ -5249,6 +5250,8 @@ BENCH_END(bc_2d_tim)
                                nba_mij(ims,kms,jms,P_m23),            &
                                nba_mij(ims,kms,jms,P_mh3),            &
                                grid%ustm, grid%znt,                   &
+                               grid%turb_power,                       &
+                               config_flags%n_turbines,               &
                                ids, ide, jds, jde, kds, kde,          &
                                ims, ime, jms, jme, kms, kme,          &
                                grid%i_start(ij), grid%i_end(ij),      &

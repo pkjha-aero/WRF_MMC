@@ -18,9 +18,9 @@ state    real   h3ts     ikj    misc    1    z    h5    "h3ts"     "sgs wt heat 
   
 state    real   usts     ij     misc    1    -    h5    "usts"     "surface u* at eta point"                "m2 s-2"
 state    real   z0ts     ij     misc    1    -    h5    "z0ts"     "z0 at eta point"                        "m"
-
+state    real   powerts  {ntrb} misc    1    -    h5    "powerts"   "turbine power output"             "kg*m2/s3"
 rconfig    integer   tsout_opt    namelist,dynamics    max_domains    0    -    "tsout_opt"    "1 to enable timeseries output"    " "
 
 package  no_tsout  tsout_opt==0   -                 -
-package  tsout     tsout_opt==1   -                 state:uts,vts,wts,tts,pts,t11ts,t22ts,t33ts,t12ts,t13ts,t23ts,tkets,h3ts,zts,usts,z0ts
+package  tsout     tsout_opt==1   -                 state:uts,vts,wts,tts,pts,t11ts,t22ts,t33ts,t12ts,t13ts,t23ts,tkets,h3ts,zts,usts,z0ts,powerts
 

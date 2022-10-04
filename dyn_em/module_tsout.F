@@ -134,10 +134,10 @@ END SUBROUTINE compute_vertical_slice
   
 SUBROUTINE cell_centered_calc( uts, vts, wts, tts, pts, tkets, zts,       &
                                t11ts, t22ts, t33ts, t12ts, t13ts, t23ts,  &
-                               h3ts, usts, z0ts,                          &
+                               h3ts, usts, z0ts, powerts,                 &
                                u, v, w, t, p, pb, tke, ph, phb,           &
                                t11, t22, t33, t12, t13, t23,              &
-                               h3, ust, z0,                               &
+                               h3, ust, z0, turb_power, n_turbines,       &
                                ids, ide, jds, jde, kds, kde,              &
                                ims, ime, jms, jme, kms, kme,              &
                                its, ite, jts, jte, kts, kte                )
@@ -158,6 +158,8 @@ SUBROUTINE cell_centered_calc( uts, vts, wts, tts, pts, tkets, zts,       &
 
    REAL, DIMENSION(ims:ime,jms:jme), INTENT( OUT ) :: usts, z0ts
 
+   REAL, DIMENSION(n_turbines), INTENT( OUT ) :: powerts	
+
    REAL, DIMENSION(ims:ime,kms:kme,jms:jme), INTENT( IN ) :: u, v, w,           &
                                                              t, p, pb,          &
                                                              tke, ph, phb, t11, &
@@ -166,12 +168,16 @@ SUBROUTINE cell_centered_calc( uts, vts, wts, tts, pts, tkets, zts,       &
                                                          
    REAL, DIMENSION(ims:ime,jms:jme), INTENT( IN ) :: ust, z0 
    
+   REAL, DIMENSION(n_turbines), INTENT( IN ) :: turb_power
+
+   INTEGER,   INTENT( IN ) :: n_turbines    ! number of turbines
+      
    INTEGER , INTENT( IN  ) :: ids, ide, jds, jde, kds, kde, &
                               ims, ime, jms, jme, kms, kme, &
                               its, ite, jts, jte, kts, kte
 
 ! local variables
-   INTEGER :: i, j, k
+   INTEGER :: i, j, k, n
 
 !-----------------------------------------------------------------------
 ! executable starts here
@@ -208,6 +214,12 @@ SUBROUTINE cell_centered_calc( uts, vts, wts, tts, pts, tkets, zts,       &
       END DO
    END DO
    
+   DO n = 1,n_turbines
+
+     powerts(n) = turb_power(n)
+
+   END DO
+
    RETURN
 
 END SUBROUTINE cell_centered_calc
