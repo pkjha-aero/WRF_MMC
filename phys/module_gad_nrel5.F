@@ -335,7 +335,7 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
      real               :: vn, vt
      real               :: cl, cd
      real               :: cn, ct
-     real               :: solid
+     real               :: solid, F, c1, c2, c3, lambda, g
      real               :: fac1, fac2, tiploss, hubloss, lossfac
      real               :: vr
      real               :: lift, drag
@@ -354,12 +354,32 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
   fnft(1) = 0.0
   fnft(2) = 0.0
 
+  cl = 0.0
+  cd = 0.0
+
+  vn = 0.0
+  vt = 0.0
+
+  an = 0.125
+  at = 0.0
+
+  betadeg = 0
+  psideg = 0
+  ! constants used for shen correction
+  F = 0
+  c1 = 0.125
+  c2 = 29
+  c3 = 0.1  
+  ! tip speed ratio
+  lambda = omega*radmax/v0
+
+
   IF (radius .LT. radmax) THEN !JDM
      
      IF (radius .GT. radmin) THEN !JDM ! MSG CHANGED FROM .GE. TO .GT.
 
-        an = 0.0
-        at = 0.0
+        ! an = 0.0
+        ! at = 0.0
 !
         iter = 0
         epsi = 1.0        
@@ -383,7 +403,7 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
 !
 !       --Normal and tangential velocity components
 
-           an = 0.02 !JDM This is just the tip loss component of an. This was computed using the
+           ! an = 0.02 !JDM This is just the tip loss component of an. This was computed using the
                      !    IDL code as the difference between an computed with and without tip loss
                      !    across the power curve. The value of 0.02 was nearly constant.
 
@@ -432,76 +452,52 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
 !          that when v0 < 0 (ie psi < 0), this function is not called and the
 !          force is set to 0. The turbine should still yaw into place eventually.
 
-           if ( abs( psi ) .gt. 0.001 ) then
-             if ( psi .lt. (pi-0.01)) then  !! if STATEMENT ADDED BY MSG TO AVOID GETTING NAN IN tiploss AND hubloss
-              fac1 = blades / 2.0*( radmax - radius ) / ( radius*sin( psi ) )
-              fac2 = blades / 2.0*( radius - radmin ) / ( radmin*sin( psi ) )
-
-              tiploss = (2.0/pi)*acos( exp( -fac1 ) )
-              hubloss = (2.0/pi)*acos( exp( -fac2 ) )
-
-              lossfac = tiploss*hubloss
-
+ !          if ( abs( psi ) .gt. 0.001 ) then
+ !
+           !   fac1 = blades / 2.0*( radmax - radius ) / ( radius*sin( psi ) )
+           !   fac2 = blades / 2.0*( radius - radmin ) / ( radmin*sin( psi ) )
+ !
+           !   tiploss = (2.0/pi)*acos( exp( -fac1 ) )
+           !   hubloss = (2.0/pi)*acos( exp( -fac2 ) )
+           !
+           !   lossfac = tiploss*hubloss
+ 
 !             --Induction factors
 
               anold = an
               atold = at
+              
+           !  Shen et al. (2005) tip correction
+		g = exp( -c1*( blades*lambda - c2 ) ) + c3
+		fac1 = blades*( radmax - radius ) / ( 2*radius*sin( psi ) )
+		F = (2.0/pi)*acos( exp( -g*fac1 ))
+		ct = F*ct
+		cn = F*cn
+
+		an = ( 1.0 + 4.0*sin( psi )*sin( psi )/ ( solid*cn ) )**(-1.0)
+                at = ( 4.0*sin( psi )*cos( psi )/ ( solid*ct ) - 1.0 )**(-1.0)
 
 !JDM             an = ( 1. + 4.0*lossfac*sin( psi )*sin( psi )/ ( solid*cn ) )**(-1.0)
-
-              at = ( 4.0*lossfac*sin( psi )*cos( psi )/ ( solid*ct ) - 1.0 )**(-1.0)
-
-! print*,'inside of iteration'
-! print*,'iter',iter
-! print*,'omega, radius, radmin, radmax',omega,radius,radmin,radmax
-! print*,'v0, vn, vt, an, at',v0,vn,vt,an,at
-! print*,'psi, fac1, fac2',psi,fac1,fac2
-! print*,'tiploss, hubloss, lossfac',tiploss,hubloss,lossfac
-! print*,'------'
-
-            else
-
-             anold = an
-             atold = at
-
-             an = 0.0
-             at = 0.0
+!
+!               at = ( 4.0*lossfac*sin( psi )*cos( psi )/ ( solid*ct ) - 1.0 )**(-1.0)
+!
+!         else
+!
+!            anold = an
+!            atold = at
+!  
+!            an = 0.0
+!            at = 0.0
+!
+!         endif
 
 
-            endif
-          else
-
-             anold = an
-             atold = at
-
-             an = 0.0
-             at = 0.0
-
-
-          endif
 !       --Convergence criteria
 
            epsi = sqrt( ( anold - an )**2.0 + ( atold - at )**2.0 )
   
         end do
-        if (isnan(at)) then
-                print*,'at is NaN lossfac=',lossfac,'psi=',psi,'solid=',solid,'ct=',ct, & 
-                        'tiploss=',tiploss,'hubloss=',hubloss,'fac1=',fac1,'fac2=',fac2,'radius=',radius
-        endif
-!        if (at .GT. 0) then
-!                print*,'at is > 0 at=',at,'psi=',psi,'fac1=',fac1,'fac2=',fac2,'radius=',radius
-!        endif
-        if (isnan(at)) then
-                print*,'ADD LOGIC SO THAT PSI > 0 deg AND PSI < 180 deg (add error margins to each limit) '
-        endif
-!print*,'radius,radmax,radmin',radius,radmax,radmin
-!print*,'radius - radmin',radius - radmin
-!print*,'fac1,fac2',fac1,fac2
-!print*,'psi,sin(psi)',psi,sin(psi)
-!print*,'tiploss,hubloss',tiploss,hubloss
-!print*,'cl,cd',cl,cd
-!print*,'cn,ct',cn,ct
-
+ 
 !    --Normal and tangential velocity components
 
        vn = v0*( 1.0 - an )
@@ -546,12 +542,13 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
        ft = lift*sin( psi ) - drag*cos( psi )
 
 !       print*,'psi',psideg
+!    --Makes the forces in Kg/(s^2 m)
 
        fn = blades*fn/(2.0*pi*radius)
        ft = blades*ft/(2.0*pi*radius)
 
-       if( fn .lt. 0.0 ) fn = 0.0
-       if( ft .lt. 0.0 ) ft = 0.0
+!       if( fn .lt. 0.0 ) fn = 0.0
+!       if( ft .lt. 0.0 ) ft = 0.0
         if (isnan(fn)) then
                 print*,'fn is NaN, psi=',psi,'lift=',lift,'drag=',drag
         endif
