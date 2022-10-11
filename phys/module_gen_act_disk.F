@@ -1246,7 +1246,7 @@ endif
               rw_tendf(i,k,j) = rw_tendf(i,k,j)  &
                               - mut(i,j)*acc_w*cnst*fz
                 if (isnan(rw_tendf(i,k,j))) then
-                        print*,'in phys/module_gen_act_disk mut(i,j)=',mut(i,j),'acc_w=',acc_w,'cnst=',cnst,'fz=',fz,'temp=',temp
+                        !print*,'in phys/module_gen_act_disk mut(i,j)=',mut(i,j),'acc_w=',acc_w,'cnst=',cnst,'fz=',fz,'temp=',temp
                 endif
 !JDM          wp_ts(i,k,j) = -1.0*mut(i,j)*acc_w*cnst*fz
  

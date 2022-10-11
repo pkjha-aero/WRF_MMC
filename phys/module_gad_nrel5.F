@@ -350,6 +350,7 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
      radmax = 0.5*diameter
      radmin = radmax - bladelen
 !
+     !print*,'radmax', radmax, 'radmin', radmin
 
   fnft(1) = 0.0
   fnft(2) = 0.0
@@ -394,12 +395,15 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
 !    --Cord length 
 
         cord  = cscale * calc_chord_nrel5( radius/dscale )
+ 	print*,'Twist + Pitch: xi (deg)', xideg, 'xi (rad)', xi
 !
 !    --Compute induction factors an and at iteratively
 
         do while ( ( epsi .gt. epscrit ) .and. ( iter .lt. itmax ) ) 
 !
            iter = iter + 1
+	   anold = an
+           atold = at
 !
 !       --Normal and tangential velocity components
 
@@ -414,11 +418,6 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
   
            psi    = atan2(vn,vt)
            psideg = psi*180.0/pi
-! print*,'iter',iter
-! print*,'v0,  omega, radius',v0,omega,radius
-! print*,'vn, at, vt',vn,at,vt
-! print*,'psi',psi
-! print*,'------'
 
 !       --Incidence angle  
  
@@ -439,6 +438,11 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
 
            solid = cord*blades / ( 2.0*pi*radius )
 
+	   print*,'iter',iter
+	   print*,'v0,  omega, radius',v0,omega,radius
+	   print*,'psi, psideg, AoA ',psi, psideg, betadeg
+	   print*,'Before tip correction: cl, cd, cn, ct, solidity',cl, cd, cn, ct, solid
+           print*,'Before tip correction: an, vn, at, vt',an,vn,at,vt
 !       --Tip and hub loss
 
 !          When psi < 0, fac1 and fac 2 can give bizarre answers, and resulting in tip and hub loss terms - NaN.
@@ -452,8 +456,8 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
 !          that when v0 < 0 (ie psi < 0), this function is not called and the
 !          force is set to 0. The turbine should still yaw into place eventually.
 
- !          if ( abs( psi ) .gt. 0.001 ) then
- !
+           if ( abs(psi) .gt. 0.001 ) then
+	     if ( psi .lt. (pi-0.01)) then
            !   fac1 = blades / 2.0*( radmax - radius ) / ( radius*sin( psi ) )
            !   fac2 = blades / 2.0*( radius - radmin ) / ( radmin*sin( psi ) )
  !
@@ -463,9 +467,6 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
            !   lossfac = tiploss*hubloss
  
 !             --Induction factors
-
-              anold = an
-              atold = at
               
            !  Shen et al. (2005) tip correction
 		g = exp( -c1*( blades*lambda - c2 ) ) + c3
@@ -480,23 +481,41 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
 !JDM             an = ( 1. + 4.0*lossfac*sin( psi )*sin( psi )/ ( solid*cn ) )**(-1.0)
 !
 !               at = ( 4.0*lossfac*sin( psi )*cos( psi )/ ( solid*ct ) - 1.0 )**(-1.0)
+		print*,'After tip correction: cl, cd, cn, ct',cl, cd, cn, ct
+		print*,'After tip correction: an, vn, at, vt',an,vn,at,vt
+		print*,'g =',g,'psi=',psi,'F=',F,'fac1=',fac1,'radius=',radius
+	        print*,'------'
+
+	        if (isnan(at) .or. isnan(an)) then
+		  print*,'iter',iter
+	          print*,'v0,  omega, radius',v0,omega,radius
+	          print*,'psi, psideg, AoA ',psi, psideg, betadeg
+	          print*,'cl, cd, cn, ct, solidity',cl, cd, cn, ct, solid
+                  print*,'an, vn, at, vt',an,vn,at,vt
+                  print*,'g =',g,'psi=',psi,'solid=',solid, & 
+                        'F=',F,'fac1=',fac1,'radius=',radius
+	          print*,'------'
+	        endif ! Check for nan
+             else
+  
+               an = 0.0
+               at = 0.0
+ 
+             endif ! if ( psi .lt. (pi-0.01))
 !
-!         else
-!
-!            anold = an
-!            atold = at
-!  
-!            an = 0.0
-!            at = 0.0
-!
-!         endif
+           else
+  
+             an = 0.0
+             at = 0.0
+ 
+           endif ! if ( abs( psi ) .gt. 0.001 )
 
 
 !       --Convergence criteria
 
            epsi = sqrt( ( anold - an )**2.0 + ( atold - at )**2.0 )
   
-        end do
+        end do ! do while ( ( epsi .gt. epscrit ) .and. ( iter .lt. itmax ) )
  
 !    --Normal and tangential velocity components
 
@@ -547,8 +566,8 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
        fn = blades*fn/(2.0*pi*radius)
        ft = blades*ft/(2.0*pi*radius)
 
-!       if( fn .lt. 0.0 ) fn = 0.0
-!       if( ft .lt. 0.0 ) ft = 0.0
+        if( fn .lt. 0.0 ) fn = 0.0
+        if( ft .lt. 0.0 ) ft = 0.0
         if (isnan(fn)) then
                 print*,'fn is NaN, psi=',psi,'lift=',lift,'drag=',drag
         endif
