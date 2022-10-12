@@ -301,7 +301,9 @@ END FUNCTION calc_pitch_nrel5
 !=========================================================================
 
 FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
-                         radius, pitchdeg, rpm, dscale, cscale)         &
+                         radius, pitchdeg, rpm, dscale, cscale,          &
+          		 tip_corr_opt, axial_ind_opt, tang_ind_opt, 	  & !PKJ/JDM)
+ 			 g_glauert, c1_shen, c2_shen, c3_shen)! PKJ/JDM
                          result( fnft )
 !_________________________________________________________________________
 !
@@ -324,6 +326,8 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
      real, intent( in ) :: radius
      real, intent( in ) :: rpm
      real, intent( in ) :: pitchdeg
+     integer, intent (in) :: tip_corr_opt, axial_ind_opt, tang_ind_opt !PKJ/JDM
+     real, intent( in ) ::   g_glauert, c1_shen, c2_shen, c3_shen !PKJ/JDM
      real, dimension( 2 )  :: fnft
      real               :: rps, omega 
      real               :: radmax, radmin
@@ -343,6 +347,7 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
      real               :: epsi, epscrit
      real               :: cd_nac
      integer            :: iter, itmax
+     
 !
      rps   = rpm/60.0
      omega = 2.0*pi*rps
@@ -350,7 +355,7 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
      radmax = 0.5*diameter
      radmin = radmax - bladelen
 !
-     !print*,'radmax', radmax, 'radmin', radmin
+!    print*,'radmax', radmax, 'radmin', radmin
 
   fnft(1) = 0.0
   fnft(2) = 0.0
@@ -395,7 +400,7 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
 !    --Cord length 
 
         cord  = cscale * calc_chord_nrel5( radius/dscale )
- 	print*,'Twist + Pitch: xi (deg)', xideg, 'xi (rad)', xi
+! 	print*,'Twist + Pitch: xi (deg)', xideg, 'xi (rad)', xi
 !
 !    --Compute induction factors an and at iteratively
 
@@ -438,11 +443,11 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
 
            solid = cord*blades / ( 2.0*pi*radius )
 
-	   print*,'iter',iter
-	   print*,'v0,  omega, radius',v0,omega,radius
-	   print*,'psi, psideg, AoA ',psi, psideg, betadeg
-	   print*,'Before tip correction: cl, cd, cn, ct, solidity',cl, cd, cn, ct, solid
-           print*,'Before tip correction: an, vn, at, vt',an,vn,at,vt
+!	   print*,'iter',iter
+!	   print*,'v0,  omega, radius',v0,omega,radius
+!	   print*,'psi, psideg, AoA ',psi, psideg, betadeg
+!	   print*,'Before tip correction: cl, cd, cn, ct, solidity',cl, cd, cn, ct, solid
+!          print*,'Before tip correction: an, vn, at, vt',an,vn,at,vt
 !       --Tip and hub loss
 
 !          When psi < 0, fac1 and fac 2 can give bizarre answers, and resulting in tip and hub loss terms - NaN.
@@ -456,10 +461,10 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
 !          that when v0 < 0 (ie psi < 0), this function is not called and the
 !          force is set to 0. The turbine should still yaw into place eventually.
 
-           if ( abs(psi) .gt. 0.001 ) then
+           if ( psi .gt. 0.001 ) then
 	     if ( psi .lt. (pi-0.01)) then
            !   fac1 = blades / 2.0*( radmax - radius ) / ( radius*sin( psi ) )
-           !   fac2 = blades / 2.0*( radius - radmin ) / ( radmin*sin( psi ) )
+           !   fac2 = blades / 2.0*( radius - radmin ) / ( radius*sin( psi ) )
  !
            !   tiploss = (2.0/pi)*acos( exp( -fac1 ) )
            !   hubloss = (2.0/pi)*acos( exp( -fac2 ) )
@@ -481,10 +486,10 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
 !JDM             an = ( 1. + 4.0*lossfac*sin( psi )*sin( psi )/ ( solid*cn ) )**(-1.0)
 !
 !               at = ( 4.0*lossfac*sin( psi )*cos( psi )/ ( solid*ct ) - 1.0 )**(-1.0)
-		print*,'After tip correction: cl, cd, cn, ct',cl, cd, cn, ct
-		print*,'After tip correction: an, vn, at, vt',an,vn,at,vt
-		print*,'g =',g,'psi=',psi,'F=',F,'fac1=',fac1,'radius=',radius
-	        print*,'------'
+!		print*,'After tip correction: cl, cd, cn, ct',cl, cd, cn, ct
+!		print*,'After tip correction: an, vn, at, vt',an,vn,at,vt
+!		print*,'g =',g,'psi=',psi,'F=',F,'fac1=',fac1,'radius=',radius
+!	        print*,'------'
 
 	        if (isnan(at) .or. isnan(an)) then
 		  print*,'iter',iter

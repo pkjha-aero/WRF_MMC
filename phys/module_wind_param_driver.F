@@ -150,6 +150,14 @@ SUBROUTINE wind_param_driver( grid, config_flags,           &
                          config_flags%truelat1,            & !RSA
                          config_flags%truelat2,            & !RSA
                          config_flags%stand_lon,           & !RSA
+			 config_flags%tip_corr_opt,        & !PKJ/JDM
+			 config_flags%axial_ind_opt,       & !PKJ/JDM
+			 config_flags%tang_ind_opt,        & !PKJ/JDM
+			 config_flags%g_glauert,           & !PKJ/JDM
+			 config_flags%c1_shen,        	   & !PKJ/JDM
+			 config_flags%c2_shen,        	   & !PKJ/JDM
+			 config_flags%c3_shen,             & !PKJ/JDM
+			 config_flags%gaussian_fac,        & !PKJ/JDM
                          n_turbines,                       &
                          n_timeseries,                     &
                          x_turbine,                        &

@@ -21,6 +21,14 @@ USE module_gad_nrel5, ONLY: calc_rpm_nrel5, calc_pitch_nrel5, calc_fnft_nrel5
                             turb_loc_in_latlon,           & !RSA
                             truelat1, truelat2,           & !RSA
                             stand_lon,                    & !RSA
+			    tip_corr_opt,      		  & !PKJ/JDM
+			    axial_ind_opt,     		  & !PKJ/JDM
+			    tang_ind_opt,     		  & !PKJ/JDM
+			    g_glauert,           	  & !PKJ/JDM
+			    c1_shen,        	 	  & !PKJ/JDM
+			    c2_shen,        	 	  & !PKJ/JDM
+			    c3_shen,             	  & !PKJ/JDM
+			    gaussian_fac,        	  & !PKJ/JDM
                             n_turbines,                   &
                             n_timeseries,                 &
                             x_turbine,                    &
@@ -101,7 +109,7 @@ USE module_gad_nrel5, ONLY: calc_rpm_nrel5, calc_pitch_nrel5, calc_fnft_nrel5
   :: n_timeseries  ! length of timeseries for averages
 
   INTEGER,                                       INTENT( IN  ) &  
-  :: wp_opt, turbine_opt
+  :: wp_opt, turbine_opt, tip_corr_opt, axial_ind_opt, tang_ind_opt
 
   CHARACTER*256,                                 INTENT( IN  ) &
   :: windturb_spec !RSA file for reading in turbine info
@@ -110,7 +118,8 @@ USE module_gad_nrel5, ONLY: calc_rpm_nrel5, calc_pitch_nrel5, calc_fnft_nrel5
   :: turb_loc_in_latlon !RSA flag for turbine location in lat/lon, else in meters
 
   REAL,                                          INTENT( IN  ) &
-  :: truelat1, truelat2, stand_lon !RSA for converting lat/lon to x/y
+  :: truelat1, truelat2, stand_lon, & !RSA for converting lat/lon to x/y
+ 	g_glauert, c1_shen, c2_shen, c3_shen, gaussian_fac !PKJ/JDM
 
   REAL, DIMENSION( ims:ime, jms:jme ),           INTENT( IN  ) &
   :: xlat_v, xlong_u !RSA for converting lat/lon to x/y
@@ -1090,7 +1099,9 @@ endif
      !              print*,'done u-component' 
                 elseif (turbine_opt .eq. 16) then
                    fnft = calc_fnft_nrel5( v0_u, rho, blades,blade_length(n),rotor_diameter(n),   &
-                                              radius, pitchdeg, rpm,dscale,cscale)
+                                              radius, pitchdeg, rpm,dscale,cscale, 		  &
+					      tip_corr_opt, axial_ind_opt, tang_ind_opt, 	  & !PKJ/JDM
+ 					      g_glauert, c1_shen, c2_shen, c3_shen)                 !PKJ/JDM
                 endif
 
                 fn = fnft(1)
