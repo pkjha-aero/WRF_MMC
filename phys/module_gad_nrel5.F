@@ -300,14 +300,15 @@ END FUNCTION calc_pitch_nrel5
 
 !=========================================================================
 
-FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
+FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,           &
                          radius, pitchdeg, rpm, dscale, cscale,          &
-          		 tip_corr_opt, axial_ind_opt, tang_ind_opt, 	  & !PKJ/JDM)
- 			 g_glauert, c1_shen, c2_shen, c3_shen)! PKJ/JDM
-                         result( fnft )
+          		 tip_corr_opt, axial_ind_opt, tang_ind_opt, 	 & ! PKJ/JDM)
+ 			 g_glauert, c1_shen, c2_shen, c3_shen) 		 & ! PKJ/JDM
+                         RESULT( fnft )
 !_________________________________________________________________________
 !
-!  --v0       - "free stream" velocity normal to the turbine rotor plane, [m/s]
+!  --v0_upstream - "upstream" time-averaged velocity normal to the turbine rotor plane, [m/s]
+!  --v0       - "local" instantaneous velocity normal to the turbine rotor plane, [m/s]
 !  --rho      - air density, [kg/m^3]
 !  --blades   - number of turbine blades, [non-dimensional]
 !  --diameter - turbine rotor diameter, [m]
@@ -321,7 +322,7 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
 !  --fnft     - one-dimensional array (two members) with FUNCTION output
 !               specific normal and tangential forces per unit area, [N/m^2]
 !
-     real, intent( in ) :: v0, rho, blades, bladelen, diameter
+     real, intent( in ) :: v0_upstream, v0, rho, blades, bladelen, diameter
      real, intent( in ) :: dscale, cscale 
      real, intent( in ) :: radius
      real, intent( in ) :: rpm
@@ -377,7 +378,7 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
   c2 = 29
   c3 = 0.1  
   ! tip speed ratio
-  lambda = omega*radmax/v0
+  lambda = omega*radmax/v0_upstream
 
 
   IF (radius .LT. radmax) THEN !JDM

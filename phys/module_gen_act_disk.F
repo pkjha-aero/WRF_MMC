@@ -109,7 +109,7 @@ USE module_gad_nrel5, ONLY: calc_rpm_nrel5, calc_pitch_nrel5, calc_fnft_nrel5
   :: n_timeseries  ! length of timeseries for averages
 
   INTEGER,                                       INTENT( IN  ) &  
-  :: wp_opt, turbine_opt, tip_corr_opt, axial_ind_opt, tang_ind_opt
+  :: wp_opt, turbine_opt, tip_corr_opt, axial_ind_opt, tang_ind_opt !PKJ/JDM
 
   CHARACTER*256,                                 INTENT( IN  ) &
   :: windturb_spec !RSA file for reading in turbine info
@@ -1098,10 +1098,10 @@ endif
                                               radius, pitchdeg, rpm, dscale, cscale)
      !              print*,'done u-component' 
                 elseif (turbine_opt .eq. 16) then
-                   fnft = calc_fnft_nrel5( v0_u, rho, blades,blade_length(n),rotor_diameter(n),   &
+                   fnft = calc_fnft_nrel5(v0t_avg, v0_u, rho, blades,blade_length(n),rotor_diameter(n),   &
                                               radius, pitchdeg, rpm,dscale,cscale, 		  &
 					      tip_corr_opt, axial_ind_opt, tang_ind_opt, 	  & !PKJ/JDM
- 					      g_glauert, c1_shen, c2_shen, c3_shen)                 !PKJ/JDM
+ 					      g_glauert, c1_shen, c2_shen, c3_shen)                 !PKJ/JDM
                 endif
 
                 fn = fnft(1)
@@ -1177,8 +1177,10 @@ endif
                                               radius, pitchdeg, rpm, dscale, cscale)
        !               print*,'done v-component'
                    elseif (turbine_opt .eq. 16) then
-                      fnft = calc_fnft_nrel5( v0_v, rho,blades, blade_length(n), rotor_diameter(n),   &
-                                              radius, pitchdeg, rpm, dscale, cscale)
+                      fnft = calc_fnft_nrel5( v0t_avg, v0_u, rho, blades,blade_length(n),rotor_diameter(n),   &
+                                              radius, pitchdeg, rpm,dscale,cscale, 		  &
+					      tip_corr_opt, axial_ind_opt, tang_ind_opt, 	  & !PKJ/JDM
+ 					      g_glauert, c1_shen, c2_shen, c3_shen)                 !PKJ/JDM
                    endif
 
                    fn = fnft(1)
@@ -1234,8 +1236,10 @@ endif
                                             radius, pitchdeg, rpm, dscale, cscale )
          !           print*,'done w-component' 
                  elseif (turbine_opt .eq. 16) then
-                      fnft = calc_fnft_nrel5( v0_w, rho,blades, blade_length(n), rotor_diameter(n),   &
-                                              radius, pitchdeg, rpm, dscale, cscale)
+                      fnft = calc_fnft_nrel5( v0t_avg, v0_u, rho, blades,blade_length(n),rotor_diameter(n),   &
+                                              radius, pitchdeg, rpm,dscale,cscale, 		  &
+					      tip_corr_opt, axial_ind_opt, tang_ind_opt, 	  & !PKJ/JDM
+ 					      g_glauert, c1_shen, c2_shen, c3_shen)                 !PKJ/JDM
                  endif
 
                  fn = fnft(1)
@@ -1300,8 +1304,10 @@ endif
                                               radius, pitchdeg, rpm, dscale, cscale) 
  !                  print*,'done c-component'
                 elseif (turbine_opt .eq. 16) then
-                      fnft = calc_fnft_nrel5( v0_c, rho,blades, blade_length(n), rotor_diameter(n),   &
-                                              radius, pitchdeg, rpm, dscale, cscale)
+                      fnft = calc_fnft_nrel5( v0t_avg, v0_u, rho, blades,blade_length(n),rotor_diameter(n),   &
+                                              radius, pitchdeg, rpm,dscale,cscale, 		  &
+					      tip_corr_opt, axial_ind_opt, tang_ind_opt, 	  & !PKJ/JDM
+ 					      g_glauert, c1_shen, c2_shen, c3_shen)                 !PKJ/JDM
                 endif
 
                 ft = fnft(2)
