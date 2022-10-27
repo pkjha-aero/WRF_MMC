@@ -367,18 +367,24 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
   vn = 0.0
   vt = 0.0
 
-  an = 0.125
-  at = 0.0
+  IF ( tip_corr_opt .EQ. 1 ) THEN ! Glauert tip correction
+   an = 0.0
+   at = 0.0
+  ELSEIF (tip_corr_opt .EQ. 2 ) THEN !  Shen et al. (2005) tip correction
+   an = c1_shen
+   at = 0.0
+  ENDIF ! tip_corr_opt
+
 
   betadeg = 0
   psideg = 0
   ! constants used for shen correction
   F = 0
-  c1 = 0.125
-  c2 = 29
-  c3 = 0.1  
+  c1 = c1_shen
+  c2 = c2_shen
+  c3 = c3-shen 
   ! tip speed ratio
-  lambda = omega*radmax/v0_upstream
+  lambda = omega*radmax/v0 ! This should be changed to v0_upstream once we test the recovery of Shen's correction
 
 
   IF (radius .LT. radmax) THEN !JDM
@@ -412,10 +418,15 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
            atold = at
 !
 !       --Normal and tangential velocity components
-
-           ! an = 0.02 !JDM This is just the tip loss component of an. This was computed using the
+	   IF ( axial_ind_opt .EQ. 0 ) THEN ! Don't iterate over an, use a fixed one
+              an = 0.02 !JDM This is just the tip loss component of an. This was computed using the
                      !    IDL code as the difference between an computed with and without tip loss
                      !    across the power curve. The value of 0.02 was nearly constant.
+	   ENDIF
+
+	   IF ( tang_ind_opt .EQ. 0 ) THEN ! Don't iterate over at, use a fixed one
+              at = 0.00
+	   ENDIF
 
            vn = v0*( 1.0 - an )
            vt = omega*radius*( 1.0 + at ) 
@@ -449,7 +460,8 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
 !	   print*,'psi, psideg, AoA ',psi, psideg, betadeg
 !	   print*,'Before tip correction: cl, cd, cn, ct, solidity',cl, cd, cn, ct, solid
 !          print*,'Before tip correction: an, vn, at, vt',an,vn,at,vt
-!       --Tip and hub loss
+!
+           !--Tip and hub loss
 
 !          When psi < 0, fac1 and fac 2 can give bizarre answers, and resulting in tip and hub loss terms - NaN.
 !          Some logic should be added to keep things from going crazy
@@ -462,35 +474,43 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
 !          that when v0 < 0 (ie psi < 0), this function is not called and the
 !          force is set to 0. The turbine should still yaw into place eventually.
 
-           if ( psi .gt. 0.001 ) then
+           if ( abs( psi ) .gt. 0.001 ) then
 	     if ( psi .lt. (pi-0.01)) then
-           !   fac1 = blades / 2.0*( radmax - radius ) / ( radius*sin( psi ) )
-           !   fac2 = blades / 2.0*( radius - radmin ) / ( radius*sin( psi ) )
- !
-           !   tiploss = (2.0/pi)*acos( exp( -fac1 ) )
-           !   hubloss = (2.0/pi)*acos( exp( -fac2 ) )
-           !
-           !   lossfac = tiploss*hubloss
- 
-!             --Induction factors
-              
-           !  Shen et al. (2005) tip correction
-		g = exp( -c1*( blades*lambda - c2 ) ) + c3
-		fac1 = blades*( radmax - radius ) / ( 2*radius*sin( psi ) )
-		F = (2.0/pi)*acos( exp( -g*fac1 ))
-		ct = F*ct
-		cn = F*cn
 
-		an = ( 1.0 + 4.0*sin( psi )*sin( psi )/ ( solid*cn ) )**(-1.0)
-                at = ( 4.0*sin( psi )*cos( psi )/ ( solid*ct ) - 1.0 )**(-1.0)
+		IF ( tip_corr_opt .EQ. 1 ) THEN ! Glauert tip correction
+		   g = g_glauert
+		   fac1 = blades / 2.0*( radmax - radius ) / ( radius*sin( psi ) ) ! Correct this to abs (psi)
+                   fac2 = blades / 2.0*( radius - radmin ) / ( radmin*sin( psi ) ) ! Correct this to radius once we test the recovery of Glauert correction
 
-!JDM             an = ( 1. + 4.0*lossfac*sin( psi )*sin( psi )/ ( solid*cn ) )**(-1.0)
-!
-!               at = ( 4.0*lossfac*sin( psi )*cos( psi )/ ( solid*ct ) - 1.0 )**(-1.0)
-!		print*,'After tip correction: cl, cd, cn, ct',cl, cd, cn, ct
-!		print*,'After tip correction: an, vn, at, vt',an,vn,at,vt
-!		print*,'g =',g,'psi=',psi,'F=',F,'fac1=',fac1,'radius=',radius
-!	        print*,'------'
+                   tiploss = (2.0/pi)*acos( exp( -g*fac1 ) )
+                   hubloss = (2.0/pi)*acos( exp( -g*fac2 ) )
+
+                   lossfac = tiploss*hubloss
+
+		   IF ( axial_ind_opt .EQ. 1 ) THEN
+                      an = ( 1.0 + 4.0*lossfac*sin( psi )*sin( psi )/ ( solid*cn ) )**(-1.0) ! update an
+		   ENDIF
+
+		   IF ( tang_ind_opt .EQ. 1 ) THEN
+                      at = ( 4.0*lossfac*sin( psi )*cos( psi )/ ( solid*ct ) - 1.0 )**(-1.0) ! update at
+		   ENDIF
+
+		ELSEIF (tip_corr_opt .EQ. 2 ) THEN !  Shen et al. (2005) tip correction
+		   g = exp( -c1*( blades*lambda - c2 ) ) + c3
+		   fac1 = blades*( radmax - radius ) / ( 2*radius*sin( psi ) )
+		   F = (2.0/pi)*acos( exp( -g*fac1 ))
+		   ct = F*ct
+		   cn = F*cn
+
+		   IF ( axial_ind_opt .EQ. 1 ) THEN
+                      an = ( 1.0 + 4.0*sin( psi )*sin( psi )/ ( solid*cn ) )**(-1.0) ! update an
+		   ENDIF
+
+		   IF ( tang_ind_opt .EQ. 1 ) THEN
+                      at = ( 4.0*sin( psi )*cos( psi )/ ( solid*ct ) - 1.0 )**(-1.0) ! update at
+		   ENDIF
+
+		ENDIF ! tip_corr_opt
 
 	        if (isnan(at) .or. isnan(an)) then
 		  print*,'iter',iter
@@ -502,6 +522,7 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
                         'F=',F,'fac1=',fac1,'radius=',radius
 	          print*,'------'
 	        endif ! Check for nan
+
              else
   
                an = 0.0
