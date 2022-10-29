@@ -350,6 +350,7 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
      radmax = 0.5*diameter
      radmin = radmax - bladelen
 !
+!    print*,'radmax', radmax, 'radmin', radmin
 
   fnft(1) = 0.0
   fnft(2) = 0.0
@@ -394,11 +395,6 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
   
            psi    = atan2(vn,vt)
            psideg = psi*180.0/pi
-! print*,'iter',iter
-! print*,'v0,  omega, radius',v0,omega,radius
-! print*,'vn, at, vt',vn,at,vt
-! print*,'psi',psi
-! print*,'------'
 
 !       --Incidence angle  
  
@@ -419,6 +415,12 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
 
            solid = cord*blades / ( 2.0*pi*radius )
 
+           print*,'iter',iter
+ 	   print*,'v0,  omega, radius',v0,omega,radius
+	   print*,'psi, psideg, AoA ',psi, psideg, betadeg
+	   print*,'Before tip correction: cl, cd, cn, ct, solidity',cl, cd, cn, ct, solid
+           print*,'Before tip correction: an, vn, at, vt',an,vn,at,vt
+
 !       --Tip and hub loss
 
 !          When psi < 0, fac1 and fac 2 can give bizarre answers, and resulting in tip and hub loss terms - NaN.
@@ -433,7 +435,8 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
 !          force is set to 0. The turbine should still yaw into place eventually.
 
            if ( abs( psi ) .gt. 0.001 ) then
-             if ( psi .lt. (pi-0.01)) then  !! if STATEMENT ADDED BY MSG TO AVOID GETTING NAN IN tiploss AND hubloss
+             if ( psi .lt. (pi-0.01)) then
+              
               fac1 = blades / 2.0*( radmax - radius ) / ( radius*sin( psi ) )
               fac2 = blades / 2.0*( radius - radmin ) / ( radmin*sin( psi ) )
 
@@ -442,22 +445,16 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
 
               lossfac = tiploss*hubloss
 
-!             --Induction factors
-
               anold = an
               atold = at
 
 !JDM             an = ( 1. + 4.0*lossfac*sin( psi )*sin( psi )/ ( solid*cn ) )**(-1.0)
 
               at = ( 4.0*lossfac*sin( psi )*cos( psi )/ ( solid*ct ) - 1.0 )**(-1.0)
-
-! print*,'inside of iteration'
-! print*,'iter',iter
-! print*,'omega, radius, radmin, radmax',omega,radius,radmin,radmax
-! print*,'v0, vn, vt, an, at',v0,vn,vt,an,at
-! print*,'psi, fac1, fac2',psi,fac1,fac2
-! print*,'tiploss, hubloss, lossfac',tiploss,hubloss,lossfac
-! print*,'------'
+ 
+              print*,'fac1=',fac1,'fac2=',fac2, 'tiploss=',tiploss,'hubloss=',hubloss,'lossfac=',lossfac
+              print*,'After tip correction: an, at',an,at
+              print*,'------'
 
             else
 
@@ -467,8 +464,8 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
              an = 0.0
              at = 0.0
 
-
             endif
+
           else
 
              anold = an
@@ -476,8 +473,6 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
 
              an = 0.0
              at = 0.0
-
-
           endif
 !       --Convergence criteria
 
@@ -494,13 +489,6 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
         if (isnan(at)) then
                 print*,'ADD LOGIC SO THAT PSI > 0 deg AND PSI < 180 deg (add error margins to each limit) '
         endif
-!print*,'radius,radmax,radmin',radius,radmax,radmin
-!print*,'radius - radmin',radius - radmin
-!print*,'fac1,fac2',fac1,fac2
-!print*,'psi,sin(psi)',psi,sin(psi)
-!print*,'tiploss,hubloss',tiploss,hubloss
-!print*,'cl,cd',cl,cd
-!print*,'cn,ct',cn,ct
 
 !    --Normal and tangential velocity components
 
