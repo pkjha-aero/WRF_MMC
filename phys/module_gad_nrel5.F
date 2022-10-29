@@ -348,7 +348,6 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
      real               :: epsi, epscrit
      real               :: cd_nac
      integer            :: iter, itmax
-     
 !
      rps   = rpm/60.0
      omega = 2.0*pi*rps
@@ -382,10 +381,11 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
   F = 0
   c1 = c1_shen
   c2 = c2_shen
-  c3 = c3-shen 
+  c3 = c3_shen 
   ! tip speed ratio
   lambda = omega*radmax/v0 ! This should be changed to v0_upstream once we test the recovery of Shen's correction
-
+  !print*,'In calc_fnft, at function initialization..'
+  !print*,'an:', an, 'at:', at, 'c1: ', c1, 'c2: ', c2, 'c3: ', c3, 'lambda: ', lambda
 
   IF (radius .LT. radmax) THEN !JDM
      
@@ -414,8 +414,8 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
         do while ( ( epsi .gt. epscrit ) .and. ( iter .lt. itmax ) ) 
 !
            iter = iter + 1
-	   anold = an
-           atold = at
+	   !anold = an
+           !atold = at
 !
 !       --Normal and tangential velocity components
 	   IF ( axial_ind_opt .EQ. 0 ) THEN ! Don't iterate over an, use a fixed one
@@ -455,12 +455,12 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
 
            solid = cord*blades / ( 2.0*pi*radius )
 
-!	   print*,'iter',iter
-!	   print*,'v0,  omega, radius',v0,omega,radius
-!	   print*,'psi, psideg, AoA ',psi, psideg, betadeg
-!	   print*,'Before tip correction: cl, cd, cn, ct, solidity',cl, cd, cn, ct, solid
-!          print*,'Before tip correction: an, vn, at, vt',an,vn,at,vt
-!
+           print*,'iter',iter
+ 	   print*,'v0,  omega, radius',v0,omega,radius
+	   print*,'psi, psideg, AoA ',psi, psideg, betadeg
+	   print*,'Before tip correction: cl, cd, cn, ct, solidity',cl, cd, cn, ct, solid
+           print*,'Before tip correction: an, vn, at, vt',an,vn,at,vt
+
            !--Tip and hub loss
 
 !          When psi < 0, fac1 and fac 2 can give bizarre answers, and resulting in tip and hub loss terms - NaN.
@@ -475,17 +475,21 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
 !          force is set to 0. The turbine should still yaw into place eventually.
 
            if ( abs( psi ) .gt. 0.001 ) then
-	     if ( psi .lt. (pi-0.01)) then
+             if ( psi .lt. (pi-0.01)) then
 
 		IF ( tip_corr_opt .EQ. 1 ) THEN ! Glauert tip correction
 		   g = g_glauert
-		   fac1 = blades / 2.0*( radmax - radius ) / ( radius*sin( psi ) ) ! Correct this to abs (psi)
-                   fac2 = blades / 2.0*( radius - radmin ) / ( radmin*sin( psi ) ) ! Correct this to radius once we test the recovery of Glauert correction
+
+                   fac1 = blades / 2.0*( radmax - radius ) / ( radius*sin( psi ) )
+                   fac2 = blades / 2.0*( radius - radmin ) / ( radmin*sin( psi ) )
 
                    tiploss = (2.0/pi)*acos( exp( -g*fac1 ) )
                    hubloss = (2.0/pi)*acos( exp( -g*fac2 ) )
 
                    lossfac = tiploss*hubloss
+
+                   anold = an
+                   atold = at
 
 		   IF ( axial_ind_opt .EQ. 1 ) THEN
                       an = ( 1.0 + 4.0*lossfac*sin( psi )*sin( psi )/ ( solid*cn ) )**(-1.0) ! update an
@@ -495,12 +499,20 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
                       at = ( 4.0*lossfac*sin( psi )*cos( psi )/ ( solid*ct ) - 1.0 )**(-1.0) ! update at
 		   ENDIF
 
+                   !print*,'tip_corr_opt =',tip_corr_opt,'axial_ind_opt=',axial_ind_opt,'tang_ind_opt=',tang_ind_opt,'g=',g,
+                   print*,'fac1=',fac1,'fac2=',fac2, 'tiploss=',tiploss,'hubloss=',hubloss,'lossfac=',lossfac
+                   print*,'After tip correction: an, at',an,at
+                   print*,'------'
+
 		ELSEIF (tip_corr_opt .EQ. 2 ) THEN !  Shen et al. (2005) tip correction
 		   g = exp( -c1*( blades*lambda - c2 ) ) + c3
 		   fac1 = blades*( radmax - radius ) / ( 2*radius*sin( psi ) )
 		   F = (2.0/pi)*acos( exp( -g*fac1 ))
 		   ct = F*ct
 		   cn = F*cn
+
+                   anold = an
+                   atold = at
 
 		   IF ( axial_ind_opt .EQ. 1 ) THEN
                       an = ( 1.0 + 4.0*sin( psi )*sin( psi )/ ( solid*cn ) )**(-1.0) ! update an
@@ -509,6 +521,10 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
 		   IF ( tang_ind_opt .EQ. 1 ) THEN
                       at = ( 4.0*sin( psi )*cos( psi )/ ( solid*ct ) - 1.0 )**(-1.0) ! update at
 		   ENDIF
+
+                   print*,'tip_corr_opt =',tip_corr_opt,'axial_ind_opt=',axial_ind_opt,'tang_ind_opt=',tang_ind_opt, & 
+                        'g=',g,'fac1=',fac1,'F=',F, 'cn=',cn,'ct=',ct
+                   print*,'After tip correction: an, at',an,at
 
 		ENDIF ! tip_corr_opt
 
@@ -523,27 +539,30 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
 	          print*,'------'
 	        endif ! Check for nan
 
-             else
-  
-               an = 0.0
-               at = 0.0
- 
-             endif ! if ( psi .lt. (pi-0.01))
-!
-           else
-  
+            else
+               
+             anold = an
+             atold = at
+
              an = 0.0
              at = 0.0
- 
-           endif ! if ( abs( psi ) .gt. 0.001 )
 
+            endif ! if ( psi .lt. (pi-0.01))
 
+          else
+
+             anold = an
+             atold = at
+
+             an = 0.0
+             at = 0.0
+          endif ! if ( abs( psi ) .gt. 0.001 )
 !       --Convergence criteria
 
            epsi = sqrt( ( anold - an )**2.0 + ( atold - at )**2.0 )
   
         end do ! do while ( ( epsi .gt. epscrit ) .and. ( iter .lt. itmax ) )
- 
+
 !    --Normal and tangential velocity components
 
        vn = v0*( 1.0 - an )
@@ -593,8 +612,8 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
        fn = blades*fn/(2.0*pi*radius)
        ft = blades*ft/(2.0*pi*radius)
 
-        if( fn .lt. 0.0 ) fn = 0.0
-        if( ft .lt. 0.0 ) ft = 0.0
+       if( fn .lt. 0.0 ) fn = 0.0
+       if( ft .lt. 0.0 ) ft = 0.0
         if (isnan(fn)) then
                 print*,'fn is NaN, psi=',psi,'lift=',lift,'drag=',drag
         endif
