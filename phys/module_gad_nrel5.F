@@ -454,6 +454,7 @@ FUNCTION calc_fnft_nrel5( v0, rho, blades, bladelen, diameter,           &
  
               print*,'fac1=',fac1,'fac2=',fac2, 'tiploss=',tiploss,'hubloss=',hubloss,'lossfac=',lossfac
               print*,'After tip correction: an, at',an,at
+              !print '(a14,2X,4F15.12)','an, at, vn,vt',an,at,vn,vt
               print*,'------'
 
             else
