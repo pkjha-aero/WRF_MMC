@@ -367,7 +367,7 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
   vt = 0.0
 
   IF ( tip_corr_opt .EQ. 1 ) THEN ! Glauert tip correction
-   an = 0.0
+   an = 0.02
    at = 0.0
   ELSEIF (tip_corr_opt .EQ. 2 ) THEN !  Shen et al. (2005) tip correction
    an = c1_shen
@@ -375,10 +375,10 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
   ENDIF ! tip_corr_opt
 
 
-  betadeg = 0
-  psideg = 0
+  betadeg = 0.0
+  psideg = 0.0
   ! constants used for shen correction
-  F = 0
+  F = 0.0
   c1 = c1_shen
   c2 = c2_shen
   c3 = c3_shen 
@@ -425,7 +425,7 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
 	   ENDIF
 
 	   IF ( tang_ind_opt .EQ. 0 ) THEN ! Don't iterate over at, use a fixed one
-              at = 0.00
+              at = 0.0
 	   ENDIF
 
            vn = v0*( 1.0 - an )
@@ -502,6 +502,7 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
                    !print*,'tip_corr_opt =',tip_corr_opt,'axial_ind_opt=',axial_ind_opt,'tang_ind_opt=',tang_ind_opt,'g=',g,
                    print*,'fac1=',fac1,'fac2=',fac2, 'tiploss=',tiploss,'hubloss=',hubloss,'lossfac=',lossfac
                    print*,'After tip correction: an, at',an,at
+                   !print '(a14,2X,4F15.12)','an, at, vn,vt',an,at,vn,vt
                    print*,'------'
 
 		ELSEIF (tip_corr_opt .EQ. 2 ) THEN !  Shen et al. (2005) tip correction
