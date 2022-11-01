@@ -41,11 +41,11 @@ rconfig integer  n_tmeturb       namelist,physics   1               0      rh   
 rconfig integer  tip_corr_opt    namelist,physics   1               0      rh      "tip_corr_opt"      "Tip correction option"      "Integer [-], 0: No Correction, 1: Glauert, 2: Shen"
 rconfig integer  axial_ind_opt   namelist,physics   1               0      rh      "axial_ind_opt"     "Axial induction option (Iterate or not)"      "Integer [-], 0: No Iteration, 1: Iterate"
 rconfig integer  tang_ind_opt    namelist,physics   1               0      rh      "tang_ind_opt"      "Tangential induction option (Iterate or not)" "Integer [-], 0: No Iteration, 1: Iterate"
-rconfig real	 g_glauert       namelist.physics   1               1.0    rh      "g_glauert"         "factor in the exponential for tip/root loss"  "Real [-]"
-rconfig real	 c1_shen         namelist.physics   1               0.125  rh      "c1_shen"           "param for computing the factor in the exponential for tip/root loss"  "Real [-]"
-rconfig real	 c2_shen         namelist.physics   1              29.0    rh      "c2_shen"           "param for computing the factor in the exponential for tip/root loss"  "Real [-]"
-rconfig real	 c3_shen         namelist.physics   1               0.1    rh      "c3_shen"           "param for computing the factor in the exponential for tip/root loss"  "Real [-]"
-rconfig real	 gaussian_fac    namelist.physics   1               2.0    rh      "gaussian_fac"      "Gaussian spreading width factor to be multiplied with grid resolution to get actual gaussian width"  "Real [-]"
+rconfig real	 g_glauert       namelist,physics   1               1.0    rh      "g_glauert"         "factor in the exponential for tip/root loss"  "Real [-]"
+rconfig real	 c1_shen         namelist,physics   1               0.125  rh      "c1_shen"           "param for computing the factor in the exponential for tip/root loss"  "Real [-]"
+rconfig real	 c2_shen         namelist,physics   1              29.0    rh      "c2_shen"           "param for computing the factor in the exponential for tip/root loss"  "Real [-]"
+rconfig real	 c3_shen         namelist,physics   1               0.1    rh      "c3_shen"           "param for computing the factor in the exponential for tip/root loss"  "Real [-]"
+rconfig real	 gaussian_fac    namelist,physics   1               2.0    rh      "gaussian_fac"      "Gaussian spreading width factor to be multiplied with grid resolution to get actual gaussian width"  "Real [-]"
 
 rconfig character windturb_spec      namelist,physics   1	    "none"  -	   "windturb_spec"	"" 	"" #RSA file for reading in turbine info
 rconfig logical   turb_loc_in_latlon namelist,physics   1           .false. h      "turb_loc_in_latlon" ""      "" #RSA flag for whether turbine location is lat/lon (else in meters from edge of domain)

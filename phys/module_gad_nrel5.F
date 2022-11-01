@@ -455,11 +455,11 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
 
            solid = cord*blades / ( 2.0*pi*radius )
 
-           print*,'iter',iter
- 	   print*,'v0,  omega, radius',v0,omega,radius
-	   print*,'psi, psideg, AoA ',psi, psideg, betadeg
-	   print*,'Before tip correction: cl, cd, cn, ct, solidity',cl, cd, cn, ct, solid
-           print*,'Before tip correction: an, vn, at, vt',an,vn,at,vt
+           !print*,'iter',iter
+ 	   !print*,'v0,  omega, radius',v0,omega,radius
+	   !print*,'psi, psideg, AoA ',psi, psideg, betadeg
+	   !print*,'Before tip correction: cl, cd, cn, ct, solidity',cl, cd, cn, ct, solid
+           !print*,'Before tip correction: an, vn, at, vt',an,vn,at,vt
 
            !--Tip and hub loss
 
@@ -500,10 +500,10 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
 		   ENDIF
 
                    !print*,'tip_corr_opt =',tip_corr_opt,'axial_ind_opt=',axial_ind_opt,'tang_ind_opt=',tang_ind_opt,'g=',g,
-                   print*,'fac1=',fac1,'fac2=',fac2, 'tiploss=',tiploss,'hubloss=',hubloss,'lossfac=',lossfac
-                   print*,'After tip correction: an, at',an,at
+                   !print*,'fac1=',fac1,'fac2=',fac2, 'tiploss=',tiploss,'hubloss=',hubloss,'lossfac=',lossfac
+                   !print*,'After tip correction: an, at',an,at
                    !print '(a14,2X,4F15.12)','an, at, vn,vt',an,at,vn,vt
-                   print*,'------'
+                   !print*,'------'
 
 		ELSEIF (tip_corr_opt .EQ. 2 ) THEN !  Shen et al. (2005) tip correction
 		   g = exp( -c1*( blades*lambda - c2 ) ) + c3
@@ -523,9 +523,9 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
                       at = ( 4.0*sin( psi )*cos( psi )/ ( solid*ct ) - 1.0 )**(-1.0) ! update at
 		   ENDIF
 
-                   print*,'tip_corr_opt =',tip_corr_opt,'axial_ind_opt=',axial_ind_opt,'tang_ind_opt=',tang_ind_opt, & 
-                        'g=',g,'fac1=',fac1,'F=',F, 'cn=',cn,'ct=',ct
-                   print*,'After tip correction: an, at',an,at
+                   !print*,'tip_corr_opt =',tip_corr_opt,'axial_ind_opt=',axial_ind_opt,'tang_ind_opt=',tang_ind_opt, & 
+                   !     'g=',g,'fac1=',fac1,'F=',F, 'cn=',cn,'ct=',ct
+                   !print*,'After tip correction: an, at',an,at
 
 		ENDIF ! tip_corr_opt
 
