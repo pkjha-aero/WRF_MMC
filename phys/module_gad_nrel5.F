@@ -383,7 +383,7 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
   c2 = c2_shen
   c3 = c3_shen 
   ! tip speed ratio
-  lambda = omega*radmax/v0 ! This should be changed to v0_upstream once we test the recovery of Shen's correction
+  lambda = omega*radmax/v0_upstream
   !print*,'In calc_fnft, at function initialization..'
   !print*,'an:', an, 'at:', at, 'c1: ', c1, 'c2: ', c2, 'c3: ', c3, 'lambda: ', lambda
 
@@ -414,19 +414,10 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
         do while ( ( epsi .gt. epscrit ) .and. ( iter .lt. itmax ) ) 
 !
            iter = iter + 1
-	   !anold = an
-           !atold = at
+           anold = an
+           atold = at
 !
 !       --Normal and tangential velocity components
-	   IF ( axial_ind_opt .EQ. 0 ) THEN ! Don't iterate over an, use a fixed one
-              an = 0.02 !JDM This is just the tip loss component of an. This was computed using the
-                     !    IDL code as the difference between an computed with and without tip loss
-                     !    across the power curve. The value of 0.02 was nearly constant.
-	   ENDIF
-
-	   IF ( tang_ind_opt .EQ. 0 ) THEN ! Don't iterate over at, use a fixed one
-              at = 0.0
-	   ENDIF
 
            vn = v0*( 1.0 - an )
            vt = omega*radius*( 1.0 + at ) 
@@ -456,9 +447,9 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
            solid = cord*blades / ( 2.0*pi*radius )
 
            !print*,'iter',iter
- 	   !print*,'v0,  omega, radius',v0,omega,radius
-	   !print*,'psi, psideg, AoA ',psi, psideg, betadeg
-	   !print*,'Before tip correction: cl, cd, cn, ct, solidity',cl, cd, cn, ct, solid
+           !print*,'v0,  omega, radius',v0,omega,radius
+           !print*,'psi, psideg, AoA ',psi, psideg, betadeg
+           !print*,'Before tip correction: cl, cd, cn, ct, solidity',cl, cd, cn, ct, solid
            !print*,'Before tip correction: an, vn, at, vt',an,vn,at,vt
 
            !--Tip and hub loss
@@ -477,19 +468,16 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
            if ( abs( psi ) .gt. 0.001 ) then
              if ( psi .lt. (pi-0.01)) then
 
-		IF ( tip_corr_opt .EQ. 1 ) THEN ! Glauert tip correction
-		   g = g_glauert
+                IF ( tip_corr_opt .EQ. 1 ) THEN ! Glauert tip correction
+                   g = g_glauert
 
-                   fac1 = blades / 2.0*( radmax - radius ) / ( radius*sin( psi ) )
-                   fac2 = blades / 2.0*( radius - radmin ) / ( radmin*sin( psi ) )
+                   fac1 = blades / 2.0*( radmax - radius ) / ( radius*sin( abs(psi) ) )
+                   fac2 = blades / 2.0*( radius - radmin ) / ( radius*sin( abs(psi) ) )
 
                    tiploss = (2.0/pi)*acos( exp( -g*fac1 ) )
                    hubloss = (2.0/pi)*acos( exp( -g*fac2 ) )
 
                    lossfac = tiploss*hubloss
-
-                   anold = an
-                   atold = at
 
 		   IF ( axial_ind_opt .EQ. 1 ) THEN
                       an = ( 1.0 + 4.0*lossfac*sin( psi )*sin( psi )/ ( solid*cn ) )**(-1.0) ! update an
@@ -507,13 +495,10 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
 
 		ELSEIF (tip_corr_opt .EQ. 2 ) THEN !  Shen et al. (2005) tip correction
 		   g = exp( -c1*( blades*lambda - c2 ) ) + c3
-		   fac1 = blades*( radmax - radius ) / ( 2*radius*sin( psi ) )
+		   fac1 = blades*( radmax - radius ) / ( 2*radius*sin( abs(psi) ) )
 		   F = (2.0/pi)*acos( exp( -g*fac1 ))
 		   ct = F*ct
 		   cn = F*cn
-
-                   anold = an
-                   atold = at
 
 		   IF ( axial_ind_opt .EQ. 1 ) THEN
                       an = ( 1.0 + 4.0*sin( psi )*sin( psi )/ ( solid*cn ) )**(-1.0) ! update an
@@ -541,9 +526,6 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
 	        endif ! Check for nan
 
             else
-               
-             anold = an
-             atold = at
 
              an = 0.0
              at = 0.0
@@ -552,11 +534,9 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
 
           else
 
-             anold = an
-             atold = at
-
              an = 0.0
              at = 0.0
+
           endif ! if ( abs( psi ) .gt. 0.001 )
 !       --Convergence criteria
 
