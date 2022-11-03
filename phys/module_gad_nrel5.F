@@ -483,8 +483,8 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
                    fac1 = blades / 2.0*( radmax - radius ) / ( radius*sin( psi ) )
                    fac2 = blades / 2.0*( radius - radmin ) / ( radmin*sin( psi ) )
 
-                   tiploss = (2.0/pi)*acos( exp( -g*fac1 ) )
-                   hubloss = (2.0/pi)*acos( exp( -g*fac2 ) )
+                   tiploss = (2.0/pi)*acos( min (exp( -g*fac1 ), 1.0) )
+                   hubloss = (2.0/pi)*acos( min (exp( -g*fac2 ), 1.0) )
 
                    lossfac = tiploss*hubloss
 
@@ -508,7 +508,7 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
 		ELSEIF (tip_corr_opt .EQ. 2 ) THEN !  Shen et al. (2005) tip correction
 		   g = exp( -c1*( blades*lambda - c2 ) ) + c3
 		   fac1 = blades*( radmax - radius ) / ( 2*radius*sin( psi ) )
-		   F = (2.0/pi)*acos( exp( -g*fac1 ))
+		   F = (2.0/pi)*acos( min (exp( -g*fac1 ), 1.0) )
 		   ct = F*ct
 		   cn = F*cn
 
