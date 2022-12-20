@@ -332,7 +332,7 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
      real, dimension( 2 )  :: fnft
      real               :: rps, omega 
      real               :: radmax, radmin
-     real               :: an, at
+     real               :: an, at, a
      real               :: anold, atold
      real               :: cord
      real               :: twist
@@ -340,7 +340,7 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
      real               :: vn, vt
      real               :: cl, cd
      real               :: cn, ct
-     real               :: solid, F, c1, c2, c3, lambda, g
+     real               :: solid, F, c1, c2, c3, lambda, g, Y1, Y2
      real               :: fac1, fac2, tiploss, hubloss, lossfac
      real               :: vr
      real               :: lift, drag
@@ -366,6 +366,9 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
   vn = 0.0
   vt = 0.0
 
+  F = 0.0 ! loss_factor used in Glauert as well as Shen correction
+  a = 1.0/3.0
+
   IF ( tip_corr_opt .EQ. 1 ) THEN ! Glauert tip correction
    an = 0.02
    at = 0.0
@@ -378,7 +381,6 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
   betadeg = 0.0
   psideg = 0.0
   ! constants used for shen correction
-  F = 0.0
   c1 = c1_shen
   c2 = c2_shen
   c3 = c3_shen 
@@ -391,9 +393,6 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
      
      IF (radius .GT. radmin) THEN !JDM ! MSG CHANGED FROM .GE. TO .GT.
 
-        ! an = 0.0
-        ! at = 0.0
-!
         iter = 0
         epsi = 1.0        
         epscrit = 1.e-5
@@ -477,14 +476,14 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
                    tiploss = (2.0/pi)*acos( min (exp( -g*fac1 ), 1.0) )
                    hubloss = (2.0/pi)*acos( min (exp( -g*fac2 ), 1.0) )
 
-                   lossfac = tiploss*hubloss
+                   F = tiploss*hubloss
 
 		   IF ( axial_ind_opt .EQ. 1 ) THEN
-                      an = ( 1.0 + 4.0*lossfac*sin( psi )*sin( psi )/ ( solid*cn ) )**(-1.0) ! update an
+                      an = ( 1.0 + 4.0*F*sin( psi )*sin( psi )/ ( solid*cn ) )**(-1.0) ! update an
 		   ENDIF
 
 		   IF ( tang_ind_opt .EQ. 1 ) THEN
-                      at = ( 4.0*lossfac*sin( psi )*cos( psi )/ ( solid*ct ) - 1.0 )**(-1.0) ! update at
+                      at = (-1.0 + 4.0*F*sin( psi )*cos( psi )/ ( solid*ct ) )**(-1.0) ! update at
 		   ENDIF
 
                    !print*,'tip_corr_opt =',tip_corr_opt,'axial_ind_opt=',axial_ind_opt,'tang_ind_opt=',tang_ind_opt,'g=',g,
@@ -495,17 +494,22 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
 
 		ELSEIF (tip_corr_opt .EQ. 2 ) THEN !  Shen et al. (2005) tip correction
 		   g = exp( -c1*( blades*lambda - c2 ) ) + c3
-		   fac1 = blades*( radmax - radius ) / ( 2*radius*sin( abs(psi) ) )
-		   F = (2.0/pi)*acos( min (exp( -g*fac1 ), 1.0) )
-		   ct = F*ct
-		   cn = F*cn
+
+		   fac1 = blades/ 2.0 *( radmax - radius ) / ( radius*sin( abs(psi) ) )
+		   F1 = (2.0/pi)*acos( min (exp( -g*fac1 ), 1.0) )
+                   F  = F1
 
 		   IF ( axial_ind_opt .EQ. 1 ) THEN
-                      an = ( 1.0 + 4.0*sin( psi )*sin( psi )/ ( solid*cn ) )**(-1.0) ! update an
+		      Y1 = 4.0*F*sin( psi )*sin( psi )/ ( solid*cn*F1 )
+                      an = (2.0 + Y1 - sqrt(4.0*Y1*(1.0 - F) + Y1*Y1)) / (2.0 * (1.0 + F*Y1)) ! update an
+                      IF (an .GT. 0.33) THEN
+                         an = ( 1.0 + 4.0*F*sin( psi )*sin( psi )/ ( solid*cn ))**(-1.0)
+                      ENDIF
 		   ENDIF
 
 		   IF ( tang_ind_opt .EQ. 1 ) THEN
-                      at = ( 4.0*sin( psi )*cos( psi )/ ( solid*ct ) - 1.0 )**(-1.0) ! update at
+		      Y2 = 4.0*F*sin( psi )*cos( psi )/ ( solid*ct*F1 )
+                      at = (-1.0 + (1.0 - a*F)*Y2/(1.0 -a) )**(-1.0) ! update at
 		   ENDIF
 
                    !print*,'tip_corr_opt =',tip_corr_opt,'axial_ind_opt=',axial_ind_opt,'tang_ind_opt=',tang_ind_opt, & 
