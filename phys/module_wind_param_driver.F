@@ -153,8 +153,8 @@ SUBROUTINE wind_param_driver( grid, config_flags,           &
 			 config_flags%tip_corr_opt,        & !PKJ/JDM
 			 config_flags%axial_ind_opt,       & !PKJ/JDM
 			 config_flags%tang_ind_opt,        & !PKJ/JDM
-                         !config_flags%an_fixed,	           & !PKJ/JDM
-                         !config_flags%at_fixed,	           & !PKJ/JDM
+                         config_flags%an_fixed,	           & !PKJ/JDM
+                         config_flags%at_fixed,	           & !PKJ/JDM
 			 config_flags%g_glauert,           & !PKJ/JDM
 			 config_flags%c1_shen,        	   & !PKJ/JDM
 			 config_flags%c2_shen,        	   & !PKJ/JDM

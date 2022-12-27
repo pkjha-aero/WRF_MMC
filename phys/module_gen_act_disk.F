@@ -24,8 +24,8 @@ USE module_gad_nrel5, ONLY: calc_rpm_nrel5, calc_pitch_nrel5, calc_fnft_nrel5
 			    tip_corr_opt,      		  & !PKJ/JDM
 			    axial_ind_opt,     		  & !PKJ/JDM
 			    tang_ind_opt,     		  & !PKJ/JDM
-                            !an_fixed,                     & !PKJ/JDM
-                            !at_fixed,                     & !PKJ/JDM
+                            an_fixed,                     & !PKJ/JDM
+                            at_fixed,                     & !PKJ/JDM
 			    g_glauert,           	  & !PKJ/JDM
 			    c1_shen,        	 	  & !PKJ/JDM
 			    c2_shen,        	 	  & !PKJ/JDM
@@ -121,7 +121,7 @@ USE module_gad_nrel5, ONLY: calc_rpm_nrel5, calc_pitch_nrel5, calc_fnft_nrel5
 
   REAL,                                          INTENT( IN  ) &
   :: truelat1, truelat2, stand_lon, & !RSA for converting lat/lon to x/y
- 	!an_fixed, at_fixed, &
+ 	an_fixed, at_fixed, & ! PKJ/JDM
         g_glauert, c1_shen, c2_shen, c3_shen, gaussian_fac !PKJ/JDM
 
   REAL, DIMENSION( ims:ime, jms:jme ),           INTENT( IN  ) &
@@ -1104,6 +1104,7 @@ endif
                    fnft = calc_fnft_nrel5(v0t_avg, v0_u, rho, blades,blade_length(n),rotor_diameter(n),   &
                                               radius, pitchdeg, rpm,dscale,cscale, 		  &
 					      tip_corr_opt, axial_ind_opt, tang_ind_opt, 	  & !PKJ/JDM
+                                              an_fixed, at_fixed, & ! PKJ/JDM
  					      g_glauert, c1_shen, c2_shen, c3_shen)                 !PKJ/JDM
                 endif
 
@@ -1183,6 +1184,7 @@ endif
                       fnft = calc_fnft_nrel5( v0t_avg, v0_v, rho, blades,blade_length(n),rotor_diameter(n),   &
                                               radius, pitchdeg, rpm,dscale,cscale, 		  &
 					      tip_corr_opt, axial_ind_opt, tang_ind_opt, 	  & !PKJ/JDM
+                                              an_fixed, at_fixed, & ! PKJ/JDM
  					      g_glauert, c1_shen, c2_shen, c3_shen)                 !PKJ/JDM
                    endif
 
@@ -1242,6 +1244,7 @@ endif
                       fnft = calc_fnft_nrel5( v0t_avg, v0_w, rho, blades,blade_length(n),rotor_diameter(n),   &
                                               radius, pitchdeg, rpm,dscale,cscale, 		  &
 					      tip_corr_opt, axial_ind_opt, tang_ind_opt, 	  & !PKJ/JDM
+                                              an_fixed, at_fixed, & ! PKJ/JDM
  					      g_glauert, c1_shen, c2_shen, c3_shen)                 !PKJ/JDM
                  endif
 
@@ -1310,6 +1313,7 @@ endif
                       fnft = calc_fnft_nrel5( v0t_avg, v0_c, rho, blades,blade_length(n),rotor_diameter(n),   &
                                               radius, pitchdeg, rpm,dscale,cscale, 		  &
 					      tip_corr_opt, axial_ind_opt, tang_ind_opt, 	  & !PKJ/JDM
+                                              an_fixed, at_fixed, & ! PKJ/JDM
  					      g_glauert, c1_shen, c2_shen, c3_shen)                 !PKJ/JDM
                 endif
 

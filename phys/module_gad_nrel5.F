@@ -302,7 +302,8 @@ END FUNCTION calc_pitch_nrel5
 
 FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,           &
                          radius, pitchdeg, rpm, dscale, cscale,          &
-          		 tip_corr_opt, axial_ind_opt, tang_ind_opt, 	 & ! PKJ/JDM)
+          		 tip_corr_opt, axial_ind_opt, tang_ind_opt, 	 & ! PKJ/JDM
+                         an_fixed, at_fixed,                             & ! PKJ/JDM
  			 g_glauert, c1_shen, c2_shen, c3_shen) 		 & ! PKJ/JDM
                          RESULT( fnft )
 !_________________________________________________________________________
@@ -328,6 +329,7 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
      real, intent( in ) :: rpm
      real, intent( in ) :: pitchdeg
      integer, intent (in) :: tip_corr_opt, axial_ind_opt, tang_ind_opt !PKJ/JDM
+     real, intent( in ) ::   an_fixed, at_fixed !PKJ/JDM
      real, intent( in ) ::   g_glauert, c1_shen, c2_shen, c3_shen !PKJ/JDM
      real, dimension( 2 )  :: fnft
      real               :: rps, omega 
@@ -369,14 +371,8 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
   F = 0.0 ! loss_factor used in Glauert as well as Shen correction
   a = 1.0/3.0
 
-  IF ( tip_corr_opt .EQ. 1 ) THEN ! Glauert tip correction
-   an = 0.02
-   at = 0.0
-  ELSEIF (tip_corr_opt .EQ. 2 ) THEN !  Shen et al. (2005) tip correction
-   an = c1_shen
-   at = 0.0
-  ENDIF ! tip_corr_opt
-
+  an = an_fixed
+  at = at_fixed
 
   betadeg = 0.0
   psideg = 0.0
@@ -384,6 +380,7 @@ FUNCTION calc_fnft_nrel5( v0_upstream, v0, rho, blades, bladelen, diameter,     
   c1 = c1_shen
   c2 = c2_shen
   c3 = c3_shen 
+
   ! tip speed ratio
   lambda = omega*radmax/v0_upstream
   !print*,'In calc_fnft, at function initialization..'
