@@ -24,6 +24,8 @@ USE module_gad_nrel5, ONLY: calc_rpm_nrel5, calc_pitch_nrel5, calc_fnft_nrel5
 			    tip_corr_opt,      		  & !PKJ/JDM
 			    axial_ind_opt,     		  & !PKJ/JDM
 			    tang_ind_opt,     		  & !PKJ/JDM
+                            !an_fixed,                     & !PKJ/JDM
+                            !at_fixed,                     & !PKJ/JDM
 			    g_glauert,           	  & !PKJ/JDM
 			    c1_shen,        	 	  & !PKJ/JDM
 			    c2_shen,        	 	  & !PKJ/JDM
@@ -119,7 +121,8 @@ USE module_gad_nrel5, ONLY: calc_rpm_nrel5, calc_pitch_nrel5, calc_fnft_nrel5
 
   REAL,                                          INTENT( IN  ) &
   :: truelat1, truelat2, stand_lon, & !RSA for converting lat/lon to x/y
- 	g_glauert, c1_shen, c2_shen, c3_shen, gaussian_fac !PKJ/JDM
+ 	!an_fixed, at_fixed, &
+        g_glauert, c1_shen, c2_shen, c3_shen, gaussian_fac !PKJ/JDM
 
   REAL, DIMENSION( ims:ime, jms:jme ),           INTENT( IN  ) &
   :: xlat_v, xlong_u !RSA for converting lat/lon to x/y
@@ -973,12 +976,12 @@ endif
 !      sigma = sqrt(dx*dy)
 !      adenom = sigma*sqrt(2.0*pi)
 !      bdenom  = 2.0*sigma*sigma
-      sigma   = (abs(dx*cos(theta))+abs(dy*sin(theta))) !NM so normal for rotor plane sqrt(dx*dy)	!!!This is the standard deviation
+      sigma   = gaussian_fac*(abs(dx*cos(theta))+abs(dy*sin(theta))) !NM so normal for rotor plane sqrt(dx*dy)	!!!This is the standard deviation
       adenom  = sigma*sqrt(2.0*pi)                  !want integral=1 for Gaussian ;accel will have units of 1/m
       bdenom  = 2.*sigma*sigma                      !!determines spread of gaussian
 
       !NM sigmar normal to rotor plane
-      sigmar = abs(dx*cos(theta)*cos(tilt))+abs(dy*sin(theta)*cos(tilt)) !NM
+      sigmar = gaussian_fac*(abs(dx*cos(theta)*cos(tilt))+abs(dy*sin(theta)*cos(tilt))) !NM
       adenom2 = sigmar*sqrt(2.0*pi) !NM want integral to be 1 for gaussian
       bdenom2 = 2.*sigmar**2 !NM spread of 1-D gaussian 
 
